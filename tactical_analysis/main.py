@@ -15,6 +15,8 @@ from tactical_analysis.context_classifier import TacticalContextClassifier
 from tactical_analysis.network_analyzer import BaselineNetworkAnalyzer
 from tactical_analysis.motif_analyzer import MotifAnalyzer
 from tactical_analysis.coaching_insights import CoachingInsightsEngine
+from tactical_analysis.performance_analyzer import PerformanceAnalyzer
+from tactical_analysis.simulation_engine import TacticalSimulationEngine
 
 
 
@@ -163,6 +165,66 @@ def run_days_8_9(network_analyzer):
     
     return motif_analyzer, coaching_engine
 
+def run_days_12_14(network_analyzer):
+    """Run Days 12-14: Performance Impact Analysis"""
+    print_header("DAYS 12-14: PERFORMANCE IMPACT ANALYSIS")
+    
+    # Initialize performance analyzer
+    print("\n=== INITIALIZING PERFORMANCE ANALYZER ===")
+    performance_analyzer = PerformanceAnalyzer(network_analyzer)
+    
+    # Process performance analysis
+    print("\n=== PROCESSING PERFORMANCE CORRELATIONS ===")
+    performance_analyzer.process_multiple_matches()
+    
+    # Generate sample performance report
+    print("\n=== SAMPLE PERFORMANCE REPORT ===")
+    if performance_analyzer.goal_analysis:
+        sample_match = list(performance_analyzer.goal_analysis.keys())[0]
+        performance_analyzer.generate_performance_report(sample_match)
+    
+    # Visualize performance analysis
+    print("\n=== GENERATING PERFORMANCE VISUALIZATIONS ===")
+    performance_analyzer.visualize_performance_analysis()
+    
+    # Initialize simulation engine
+    print("\n=== INITIALIZING SIMULATION ENGINE ===")
+    simulation_engine = TacticalSimulationEngine(network_analyzer, performance_analyzer)
+    
+    # Establish baseline metrics
+    print("\n=== ESTABLISHING BASELINE METRICS ===")
+    simulation_engine.establish_baseline_metrics()
+    
+    # Run simulation scenarios
+    print("\n=== RUNNING WHAT-IF SCENARIOS ===")
+    simulation_engine.process_multiple_matches()
+    
+    # Generate sample simulation report
+    print("\n=== SAMPLE SIMULATION REPORT ===")
+    if simulation_engine.simulation_results:
+        sample_key = list(simulation_engine.simulation_results.keys())[0]
+        sample_results = simulation_engine.simulation_results[sample_key]
+        simulation_engine.generate_simulation_report(sample_results)
+        
+        # Visualize simulation results
+        print("\n=== GENERATING SIMULATION VISUALIZATIONS ===")
+        simulation_engine.visualize_simulation_results(sample_results)
+    
+    # Save results
+    print("\n=== SAVING RESULTS ===")
+    performance_analyzer.save_performance_analysis()
+    simulation_engine.save_simulation_results()
+    
+    print("\n✅ Days 12-14 Complete!")
+    print("✅ Performance impact analysis completed")
+    print("✅ Before/after goal analysis implemented")
+    print("✅ Network-performance correlations calculated")
+    print("✅ 5 what-if scenarios simulated")
+    print("✅ Tactical recommendations generated")
+    
+    return performance_analyzer, simulation_engine
+
+
 def run_full_analysis(competitions=None, max_matches=10, save_data=True):
     """Run the complete analysis pipeline (Days 3-7)"""
     print_header("TACTICAL ANALYSIS SYSTEM - FULL PIPELINE")
@@ -193,6 +255,9 @@ def run_full_analysis(competitions=None, max_matches=10, save_data=True):
     # Step 4: Run Days 8-9 Analysis
     motif_analyzer, coaching_engine = run_days_8_9(network_analyzer)
 
+    # Step 5: Run Days 12-14 Analysis
+    performance_analyzer, simulation_engine = run_days_12_14(network_analyzer)
+
     # Final Summary
     print_header("ANALYSIS COMPLETE - SUMMARY")
     print(f"📊 Matches analyzed: {len(data_loader.matches)}")
@@ -202,6 +267,8 @@ def run_full_analysis(competitions=None, max_matches=10, save_data=True):
     print(f"📊 Vulnerability signatures: {len(network_analyzer.vulnerability_signatures)}")
     print(f"📊 Motif patterns: {len(motif_analyzer.motif_patterns)}")
     print(f"📊 Coaching insights: {len(coaching_engine.insights)}")
+    print(f"📊 Performance correlations: {len(performance_analyzer.correlation_results)}")
+    print(f"📊 Simulation scenarios: {len(simulation_engine.simulation_results)}")
     print(f"\nAnalysis completed at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
     return {
@@ -209,7 +276,9 @@ def run_full_analysis(competitions=None, max_matches=10, save_data=True):
         'classifier': classifier,
         'network_analyzer': network_analyzer,
         'motif_analyzer': motif_analyzer,
-        'coaching_engine': coaching_engine
+        'coaching_engine': coaching_engine,
+        'performance_analyzer': performance_analyzer,
+        'simulation_engine': simulation_engine
     }
     
 
@@ -273,11 +342,142 @@ def run_custom_analysis():
     
     return run_full_analysis(competitions, max_matches)
 
+# Also add this option to the main() menu function
 def main():
     """Main entry point with menu system"""
     print_header("TACTICAL ANALYSIS SYSTEM")
+    print("Choose analysis mode:")
+    print("1. Full Analysis (Days 3-14)")
+    print("2. Quick Test (3 matches)")
+    print("3. Run from Saved Data")
+    print("4. Custom Analysis")
+    print("5. Days 3-4 Only")
+    print("6. Days 5-7 Only")
+    print("7. Days 8-9 Only")
+    print("8. Days 12-14 Only")  # NEW OPTION
     
-    run_full_analysis()
+    choice = input("\nEnter your choice (1-8): ").strip()
+    
+    try:
+        if choice == '1':
+            return run_full_analysis()
+        
+        elif choice == '2':
+            return run_quick_test()
+        
+        elif choice == '3':
+            return run_from_saved_data()
+        
+        elif choice == '4':
+            return run_custom_analysis()
+        
+        elif choice == '5':
+            # Days 3-4 only
+            data_loader = DataLoader()
+            data_loader.load_data([(43, 3)], max_matches=10)
+            return run_days_3_4(data_loader)
+        
+        elif choice == '6':
+            # Days 5-7 only
+            print("Loading existing context data...")
+            data_loader = DataLoader()
+            data_loader.load_data([(43, 3)], max_matches=10)
+            classifier = TacticalContextClassifier(data_loader)
+            
+            try:
+                import json
+                with open('tactical_contexts_days3_4.json', 'r') as f:
+                    saved_data = json.load(f)
+                    classifier.context_classifications = saved_data['context_classifications']
+                    classifier.context_transitions = saved_data['context_transitions']
+                    classifier.team_standings = saved_data['team_standings']
+                print("✅ Loaded existing context classifications")
+            except FileNotFoundError:
+                print("❌ No existing context data found. Running Days 3-4 first...")
+                classifier = run_days_3_4(data_loader)
+            
+            return run_days_5_7(classifier)
+        
+        elif choice == '7':
+            # Days 8-9 only
+            print("Loading existing network analysis data...")
+            data_loader = DataLoader()
+            data_loader.load_data([(43, 3)], max_matches=10)
+            classifier = TacticalContextClassifier(data_loader)
+            
+            try:
+                import json
+                with open('tactical_contexts_days3_4.json', 'r') as f:
+                    saved_data = json.load(f)
+                    classifier.context_classifications = saved_data['context_classifications']
+                    classifier.context_transitions = saved_data['context_transitions']
+                    classifier.team_standings = saved_data['team_standings']
+                print("✅ Loaded existing context classifications")
+            except FileNotFoundError:
+                print("❌ No existing context data found. Running Days 3-4 first...")
+                classifier = run_days_3_4(data_loader)
+            
+            network_analyzer = BaselineNetworkAnalyzer(classifier)
+            
+            try:
+                with open('network_analysis_days5_7.json', 'r') as f:
+                    saved_network_data = json.load(f)
+                    network_analyzer.network_metrics = saved_network_data['network_metrics']
+                    network_analyzer.zone_networks = saved_network_data['zone_networks']
+                    network_analyzer.vulnerability_signatures = saved_network_data['vulnerability_signatures']
+                print("✅ Loaded existing network analysis")
+            except FileNotFoundError:
+                print("❌ No existing network data found. Running Days 5-7 first...")
+                network_analyzer = run_days_5_7(classifier)
+            
+            return run_days_8_9(network_analyzer)
+        
+        elif choice == '8':
+            # Days 12-14 only
+            print("Loading existing network analysis data...")
+            data_loader = DataLoader()
+            data_loader.load_data([(43, 3)], max_matches=10)
+            classifier = TacticalContextClassifier(data_loader)
+            
+            try:
+                import json
+                with open('tactical_contexts_days3_4.json', 'r') as f:
+                    saved_data = json.load(f)
+                    classifier.context_classifications = saved_data['context_classifications']
+                    classifier.context_transitions = saved_data['context_transitions']
+                    classifier.team_standings = saved_data['team_standings']
+                print("✅ Loaded existing context classifications")
+            except FileNotFoundError:
+                print("❌ No existing context data found. Running Days 3-4 first...")
+                classifier = run_days_3_4(data_loader)
+            
+            network_analyzer = BaselineNetworkAnalyzer(classifier)
+            
+            try:
+                with open('network_analysis_days5_7.json', 'r') as f:
+                    saved_network_data = json.load(f)
+                    network_analyzer.network_metrics = saved_network_data['network_metrics']
+                    network_analyzer.zone_networks = saved_network_data['zone_networks']
+                    network_analyzer.vulnerability_signatures = saved_network_data['vulnerability_signatures']
+                print("✅ Loaded existing network analysis")
+            except FileNotFoundError:
+                print("❌ No existing network data found. Running Days 5-7 first...")
+                network_analyzer = run_days_5_7(classifier)
+            
+            return run_days_12_14(network_analyzer)
+        
+        else:
+            print("Invalid choice. Running full analysis...")
+            return run_full_analysis()
+    
+    except KeyboardInterrupt:
+        print("\n\nAnalysis interrupted by user.")
+        return None
+    except Exception as e:
+        print(f"\n❌ Error during analysis: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
     
 if __name__ == "__main__":
     # Run the main menu system

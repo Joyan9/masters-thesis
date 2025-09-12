@@ -29,23 +29,6 @@ class BaselineNetworkAnalyzer:
             'centrality_shift': 20     # 20% change in centrality measures
         }
     
-    def map_coordinates_to_zone(self, x, y, pitch_length=120, pitch_width=80):
-        """Map pitch coordinates to 7x7 grid zones (49 zones total)"""
-        if x is None or y is None or np.isnan(x) or np.isnan(y):
-            return None
-        
-        # Normalize coordinates to 0-1 range
-        x_norm = max(0, min(1, x / pitch_length))
-        y_norm = max(0, min(1, y / pitch_width))
-        
-        # Map to 7x7 grid
-        zone_x = min(6, int(x_norm * 7))
-        zone_y = min(6, int(y_norm * 7))
-        
-        # Return zone ID (0-48)
-        zone_id = zone_y * 7 + zone_x
-        return zone_id
-    
     def extract_zone_passes(self, match_id, team, start_minute, end_minute):
         """Extract passes between 7x7 zones for given time window and team"""
         if match_id not in self.context_classifier.events:
@@ -163,15 +146,6 @@ class BaselineNetworkAnalyzer:
             return None
         
         return metrics
-    
-    def create_rolling_windows(self, match_duration=90, window_size=10, step_size=5):
-        """Create rolling time windows for dynamic analysis"""
-        windows = []
-        start = 0
-        while start + window_size <= match_duration:
-            windows.append((start, start + window_size))
-            start += step_size
-        return windows
     
     def analyze_match_networks(self, match_id):
         """Analyze networks for a single match across different time windows"""

@@ -144,9 +144,9 @@ class TacticalContextClassifier:
         
         passes_per_minute = len(passes) / duration
         
-        if passes_per_minute > 20:
+        if passes_per_minute > 15:
             return 'High'
-        elif passes_per_minute >= 15:
+        elif passes_per_minute >= 10:
             return 'Medium'
         else:
             return 'Low'
