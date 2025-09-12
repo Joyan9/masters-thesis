@@ -17,6 +17,7 @@ from tactical_analysis.motif_analyzer import MotifAnalyzer
 from tactical_analysis.coaching_insights import CoachingInsightsEngine
 from tactical_analysis.performance_analyzer import PerformanceAnalyzer
 from tactical_analysis.simulation_engine import TacticalSimulationEngine
+from tactical_analysis.empirical_analysis import EmpiricalPPNAnalyzer
 
 
 
@@ -224,6 +225,33 @@ def run_days_12_14(network_analyzer):
     
     return performance_analyzer, simulation_engine
 
+def run_empirical_analysis(data_loader=None):
+    """Run the empirical analysis following exact methodology"""
+    print_header("EMPIRICAL PITCH-PASSING NETWORK ANALYSIS")
+    
+    # Load data if not provided
+    if data_loader is None:
+        print("Loading data for empirical analysis...")
+        data_loader = DataLoader()
+        data_loader.load_data([(43, 3)], max_matches=20)  # Larger sample for statistics
+    
+    # Initialize empirical analyzer
+    print("\n=== INITIALIZING EMPIRICAL ANALYZER ===")
+    empirical_analyzer = EmpiricalPPNAnalyzer(data_loader)
+    
+    # Run full analysis
+    empirical_analyzer.run_full_empirical_analysis()
+    
+    print("\n✅ Empirical Analysis Complete!")
+    print("✅ 7×7 grid PPNs constructed")
+    print("✅ Situational factors classified")
+    print("✅ Mann-Whitney U tests performed")
+    print("✅ FDR correction applied")
+    print("✅ Effect sizes calculated")
+    print("✅ Statistical significance determined")
+    
+    return empirical_analyzer
+
 
 def run_full_analysis(competitions=None, max_matches=10, save_data=True):
     """Run the complete analysis pipeline (Days 3-7)"""
@@ -233,9 +261,13 @@ def run_full_analysis(competitions=None, max_matches=10, save_data=True):
     # Default competitions if none provided
     if competitions is None:
         competitions = [
-            (43, 3),  # World Cup 2018
-            # Add more competitions as needed
-        ]
+                        (43, 3),   # World Cup 2018
+                        (11, 90),  # La Liga 2020/2021  (example; replace with seasons available to you)
+                        (2, 27),   # Premier League 2015/2016 (example)
+                        (9, 107),  # Bundesliga 2023/2024 (example)
+                        (66, 27),  # Serie A (season example)
+                        (58, 108) # Ligue 1 (season example)
+                        ]
     
     # Step 1: Load Data
     print_header("DATA LOADING")
@@ -337,12 +369,19 @@ def run_custom_analysis():
         
     except ValueError:
         print("Invalid input format. Using defaults.")
-        competitions = [(43, 3)]
-        max_matches = 10
+        competitions = [
+                        (43, 3),   # World Cup 2018
+                        (11, 90),  # La Liga 2020/2021  (example; replace with seasons available to you)
+                        (2, 27),   # Premier League 2015/2016 (example)
+                        (9, 107),  # Bundesliga 2023/2024 (example)
+                        (66, 27),  # Serie A (season example)
+                        (58, 108) # Ligue 1 (season example)
+                        ]
+        max_matches = 38
     
     return run_full_analysis(competitions, max_matches)
 
-# Also add this option to the main() menu function
+# Update the main menu
 def main():
     """Main entry point with menu system"""
     print_header("TACTICAL ANALYSIS SYSTEM")
@@ -354,10 +393,11 @@ def main():
     print("5. Days 3-4 Only")
     print("6. Days 5-7 Only")
     print("7. Days 8-9 Only")
-    print("8. Days 12-14 Only")  # NEW OPTION
+    print("8. Days 12-14 Only")
+    print("9. Empirical Analysis (Exact Methodology)")  # NEW OPTION
     
-    choice = input("\nEnter your choice (1-8): ").strip()
-    
+    choice = input("\nEnter your choice (1-9): ").strip()
+
     try:
         if choice == '1':
             return run_full_analysis()
@@ -465,6 +505,10 @@ def main():
                 network_analyzer = run_days_5_7(classifier)
             
             return run_days_12_14(network_analyzer)
+        
+        elif choice == '9':
+                # Empirical analysis
+                return run_empirical_analysis()
         
         else:
             print("Invalid choice. Running full analysis...")

@@ -53,8 +53,8 @@ class BaselineNetworkAnalyzer:
                 end_y = end_location[1] if end_location else None
                 
                 # Map to zones
-                start_zone = self.map_coordinates_to_zone(start_x, start_y)
-                end_zone = self.map_coordinates_to_zone(end_x, end_y)
+                start_zone = map_coordinates_to_zone(start_x, start_y)
+                end_zone = map_coordinates_to_zone(end_x, end_y)
                 
                 if start_zone is not None and end_zone is not None and start_zone != end_zone:
                     zone_passes.append({
@@ -174,7 +174,7 @@ class BaselineNetworkAnalyzer:
         ]
         
         # Rolling windows for dynamic analysis
-        rolling_windows = self.create_rolling_windows()
+        rolling_windows = create_rolling_windows()
         
         for team in [home_team, away_team]:
             self.zone_networks[match_id][team] = {}
