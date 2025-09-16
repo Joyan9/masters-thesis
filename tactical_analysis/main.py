@@ -82,9 +82,25 @@ def parse_competitions(comp_str: Optional[str]) -> List[Tuple[int, int]]:
     """
     if not comp_str:
         return [
-            (11, 90),  # La Liga example
-            (2, 27),   # Premier League example
-        ]
+                # La Liga
+                (11, 90),   # La Liga 2020/2021
+                (11, 42),   # La Liga 2019/2020
+                (11, 4),    # La Liga 2018/2019
+                (11, 1),    # La Liga 2017/2018
+                (11, 2),    # La Liga 2016/2017
+            
+                # Ligue 1
+                (7, 235),   # Ligue 1 2022/2023
+                (7, 108),   # Ligue 1 2021/2022
+
+                # Premier League
+                (2, 27),    # Premier League 2015/2016
+                (2, 44),    # Premier League 2003/2004
+
+                # Serie A
+                (12, 27),   # Serie A 2015/2016
+                (12, 86),   # Serie A 1986/1987
+            ]
     comps = []
     for token in comp_str.split():
         try:
@@ -329,7 +345,7 @@ def main_cli(argv: Optional[List[str]] = None) -> Dict[str, Any]:
         if args.mode == "quick":
             # Minimal test: small dataset, run full pipeline on it
             LOG.info("Running quick test pipeline")
-            dl = stage_data_loading([(43, 3)], max_matches=min(3, args.max_matches), save_file=loaded_data_save)
+            dl = stage_data_loading([(2, 27)], max_matches=min(3, args.max_matches), save_file=loaded_data_save)
             classifier = stage_context_classification(dl, save_file=context_save)
             network = stage_network_analysis(classifier, save_file=network_save)
             motif, coaching = stage_motif_and_coaching(network, save_motif=motif_save, save_coaching=coaching_save)
