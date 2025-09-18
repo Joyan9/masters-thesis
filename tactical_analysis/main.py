@@ -143,7 +143,7 @@ def stage_data_loading(competitions: List[Tuple[int, int]], max_matches: int = 1
 
 def stage_context_classification(data_loader: DataLoader,
                                  save_file: Optional[Path] = DEFAULT_SAVE_DIR / "tactical_contexts.json") -> TacticalContextClassifier:
-    print_header("CONTEXT CLASSIFICATION (formerly Days 3-4)")
+    print_header("CONTEXT CLASSIFICATION")
     classifier = TacticalContextClassifier(data_loader)
     LOG.info("Processing context classifications for multiple matches...")
     classifier.process_multiple_matches()
@@ -168,7 +168,7 @@ def stage_context_classification(data_loader: DataLoader,
 
 def stage_network_analysis(classifier: TacticalContextClassifier,
                            save_file: Optional[Path] = DEFAULT_SAVE_DIR / "network_analysis.json") -> BaselineNetworkAnalyzer:
-    print_header("BASELINE NETWORK ANALYSIS (formerly Days 5-7)")
+    print_header("BASELINE NETWORK ANALYSIS")
     network_analyzer = BaselineNetworkAnalyzer(classifier)
     network_analyzer.process_multiple_matches()
     stats = network_analyzer.compare_contexts_static()
@@ -198,7 +198,7 @@ def stage_network_analysis(classifier: TacticalContextClassifier,
 def stage_motif_and_coaching(network_analyzer: BaselineNetworkAnalyzer,
                              save_motif: Optional[Path] = DEFAULT_SAVE_DIR / "motif_analysis.json",
                              save_coaching: Optional[Path] = DEFAULT_SAVE_DIR / "coaching_insights.json"):
-    print_header("MOTIF ANALYSIS & COACHING INSIGHTS (formerly Days 8-9)")
+    print_header("MOTIF ANALYSIS & COACHING INSIGHTS")
     motif_analyzer = MotifAnalyzer(network_analyzer)
     motif_analyzer.process_multiple_matches()
     motif_analyzer.compare_motif_contexts()

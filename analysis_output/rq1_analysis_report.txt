@@ -1,0 +1,53 @@
+CONTEXTUAL NETWORK ANALYSIS SUMMARY
+==================================================
+
+CONTEXT TYPE: SCORE_CONTEXTS
+------------------------------
+Descriptive Statistics (Mean ± Std):
+  tied:
+    density: 0.285 ± 0.017 (n=5)
+    clustering_coefficient: 0.071 ± 0.015 (n=5)
+
+Significant Differences (p < 0.05):
+  No significant differences found.
+
+CONTEXT TYPE: PHASE_CONTEXTS
+------------------------------
+Descriptive Statistics (Mean ± Std):
+  early:
+    density: 0.167 ± 0.015 (n=5)
+    clustering_coefficient: 0.076 ± 0.014 (n=5)
+  late:
+    density: 0.146 ± 0.013 (n=5)
+    clustering_coefficient: 0.072 ± 0.021 (n=5)
+  middle:
+    density: 0.163 ± 0.021 (n=5)
+    clustering_coefficient: 0.066 ± 0.013 (n=5)
+
+Significant Differences (p < 0.05):
+  middle_vs_late:
+    - density (p=0.031, d=1.038)
+
+CONTEXT TYPE: INTENSITY_CONTEXTS
+------------------------------
+Descriptive Statistics (Mean ± Std):
+  high:
+    density: 0.093 ± 0.001 (n=4)
+    clustering_coefficient: 0.046 ± 0.014 (n=4)
+  low:
+    density: 0.053 ± 0.002 (n=3)
+    clustering_coefficient: 0.042 ± 0.015 (n=3)
+  medium:
+    density: 0.068 ± 0.004 (n=5)
+    clustering_coefficient: 0.047 ± 0.003 (n=5)
+
+Significant Differences (p < 0.05):
+  medium_vs_low:
+    - density (p=0.001, d=4.790)
+  medium_vs_high:
+    - density (p=0.000, d=-8.374)
+  low_vs_high:
+    - density (p=0.000, d=-25.560)
+    - avg_path_length (p=0.015, d=2.792)
+    - centralization (p=0.014, d=-2.842)
+
