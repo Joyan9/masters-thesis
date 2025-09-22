@@ -63,4 +63,3 @@ class DataLoader:
         print(f"   - Matches: {len(self.matches)}")
         print(f"   - Events: {len(self.events)}")
         print(f"   - Saved on: {data.get('timestamp', 'Unknown')}")
-

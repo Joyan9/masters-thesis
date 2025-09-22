@@ -5,8 +5,8 @@ CONTEXT TYPE: SCORE_CONTEXTS
 ------------------------------
 Descriptive Statistics (Mean ± Std):
   tied:
-    density: 0.285 ± 0.017 (n=5)
-    clustering_coefficient: 0.071 ± 0.015 (n=5)
+    density: 0.296 ± 0.019 (n=5)
+    clustering_coefficient: 0.073 ± 0.014 (n=5)
 
 Significant Differences (p < 0.05):
   No significant differences found.
@@ -21,19 +21,20 @@ Descriptive Statistics (Mean ± Std):
     density: 0.146 ± 0.013 (n=5)
     clustering_coefficient: 0.072 ± 0.021 (n=5)
   middle:
-    density: 0.163 ± 0.021 (n=5)
-    clustering_coefficient: 0.066 ± 0.013 (n=5)
+    density: 0.169 ± 0.017 (n=5)
+    clustering_coefficient: 0.071 ± 0.018 (n=5)
 
 Significant Differences (p < 0.05):
   middle_vs_late:
-    - density (p=0.031, d=1.038)
+    - density (p=0.019, d=1.570)
+    - avg_path_length (p=0.040, d=-0.818)
 
 CONTEXT TYPE: INTENSITY_CONTEXTS
 ------------------------------
 Descriptive Statistics (Mean ± Std):
   high:
-    density: 0.093 ± 0.001 (n=4)
-    clustering_coefficient: 0.046 ± 0.014 (n=4)
+    density: 0.095 ± 0.004 (n=4)
+    clustering_coefficient: 0.056 ± 0.018 (n=4)
   low:
     density: 0.053 ± 0.002 (n=3)
     clustering_coefficient: 0.042 ± 0.015 (n=3)
@@ -45,9 +46,9 @@ Significant Differences (p < 0.05):
   medium_vs_low:
     - density (p=0.001, d=4.790)
   medium_vs_high:
-    - density (p=0.000, d=-8.374)
+    - density (p=0.000, d=-6.587)
   low_vs_high:
-    - density (p=0.000, d=-25.560)
-    - avg_path_length (p=0.015, d=2.792)
-    - centralization (p=0.014, d=-2.842)
+    - density (p=0.000, d=-11.567)
+    - avg_path_length (p=0.011, d=3.004)
+    - centralization (p=0.037, d=-2.151)
 

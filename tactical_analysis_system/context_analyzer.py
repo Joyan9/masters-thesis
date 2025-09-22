@@ -1,100 +1,125 @@
 import pandas as pd
 import numpy as np
 from typing import Dict, List, Tuple
+from .utils import create_sliding_windows, get_context_label
 
 class ContextAnalyzer:
-    """Analyzes match contexts for network analysis"""
+    """Analyzes match contexts using sliding windows"""
     
-    def __init__(self):
-        self.context_periods = {}
+    def __init__(self, window_size=10, step_size=5, min_passes=20):
+        self.window_size = window_size
+        self.step_size = step_size
+        self.min_passes = min_passes
+        self.context_windows = {}
     
-    def extract_match_contexts(self, events: List[Dict], match_id: str) -> Dict:
-        """Extract contextual periods from match events"""
+    def extract_context_windows(self, events: List[Dict], match_id: str) -> List[Dict]:
+        """Extract context windows from match events"""
         df = pd.DataFrame(events)
         
-        # Filter relevant events and handle missing data
-        df = df[df['type'].isin(['Pass', 'Goal', 'Substitution'])].copy()
+        # Filter and prepare data
+        df = df[df['type'].isin(['Pass', 'Goal'])].copy()
         df['minute'] = pd.to_numeric(df['minute'], errors='coerce').fillna(0)
         
-        contexts = {
-            'score_contexts': self._get_score_contexts(df, match_id),
-            'phase_contexts': self._get_phase_contexts(),
-            'intensity_contexts': self._get_intensity_contexts(df)
-        }
+        # Get team names
+        teams = df['team'].unique()
+        if len(teams) < 2:
+            print(f"Warning: Only {len(teams)} teams found in match {match_id}")
+            return []
         
-        self.context_periods[match_id] = contexts
-        return contexts
+        # Calculate score progression
+        score_progression = self._calculate_score_progression(df, teams)
+        
+        # Create sliding windows
+        windows = create_sliding_windows(90, self.window_size, self.step_size)
+        context_windows = []
+        
+        for start_min, end_min in windows:
+            for team in teams:
+                window_data = self._analyze_window(
+                    df, team, start_min, end_min, score_progression, match_id
+                )
+                if window_data:
+                    context_windows.append(window_data)
+        
+        self.context_windows[match_id] = context_windows
+        return context_windows
     
-    def _get_score_contexts(self, df: pd.DataFrame, match_id: str) -> List[Tuple]:
-        """Determine score-based contexts (Leading/Tied/Trailing)"""
-        contexts = []
-        home_score, away_score = 0, 0
-        last_minute = 0
-        
-        # Get goals chronologically
+    def _calculate_score_progression(self, df: pd.DataFrame, teams: List[str]) -> Dict:
+        """Calculate score at each minute"""
+        home_team, away_team = teams[0], teams[1]
         goals = df[df['type'] == 'Goal'].sort_values('minute')
         
-        # Get team names for this match
-        teams = df['team'].unique()
-        home_team = teams[0] if len(teams) > 0 else None
+        score_progression = {}
+        home_score, away_score = 0, 0
         
-        for _, goal in goals.iterrows():
-            minute = float(goal['minute'])
+        for minute in range(91):  # 0-90 minutes
+            # Add goals that occurred before this minute
+            minute_goals = goals[goals['minute'] < minute]
+            home_score = len(minute_goals[minute_goals['team'] == home_team])
+            away_score = len(minute_goals[minute_goals['team'] == away_team])
             
-            # Add context period before this goal
-            if minute > last_minute:
-                diff = home_score - away_score
-                if diff > 1:
-                    state = 'leading'
-                elif diff < -1:
-                    state = 'trailing'
-                else:
-                    state = 'tied'
-                contexts.append((last_minute, minute, state))
-            
-            # Update score (simplified - assumes first team is home team)
-            if goal['team'] == home_team:
-                home_score += 1
-            else:
-                away_score += 1
-            
-            last_minute = minute
+            score_progression[minute] = {
+                home_team: home_score,
+                away_team: away_score,
+                'diff': home_score - away_score
+            }
         
-        # Add final period
-        diff = home_score - away_score
-        final_state = 'leading' if diff > 1 else 'trailing' if diff < -1 else 'tied'
-        contexts.append((last_minute, 90, final_state))
-        
-        return contexts
+        return score_progression
     
-    def _get_phase_contexts(self) -> List[Tuple]:
-        """Define match phases"""
-        return [
-            (0, 30, 'early'),
-            (30, 60, 'middle'), 
-            (60, 90, 'late')
+    def _analyze_window(self, df: pd.DataFrame, team: str, start_min: float, 
+                       end_min: float, score_progression: Dict, match_id: str) -> Dict:
+        """Analyze a single context window"""
+        # Filter passes for this team and time window
+        team_passes = df[
+            (df['team'] == team) & 
+            (df['type'] == 'Pass') &
+            (df['minute'] >= start_min) & 
+            (df['minute'] < end_min)
         ]
+        
+        # Check minimum pass threshold
+        if len(team_passes) < self.min_passes:
+            return None
+        
+        # Get context at window midpoint
+        mid_minute = int((start_min + end_min) / 2)
+        score_data = score_progression.get(mid_minute, {'diff': 0})
+        
+        # Determine score context relative to this team
+        team_list = list(score_progression[0].keys())
+        team_list.remove('diff')
+        
+        if team == team_list[0]:  # Home team
+            score_diff = score_data['diff']
+        else:  # Away team
+            score_diff = -score_data['diff']
+        
+        contexts = get_context_label(mid_minute, score_diff, None)
+        
+        # Calculate intensity
+        pass_rate = len(team_passes) / self.window_size
+        if pass_rate > 15:
+            intensity = 'high'
+        elif pass_rate > 10:
+            intensity = 'medium'
+        else:
+            intensity = 'low'
+        
+        return {
+            'match_id': match_id,
+            'team': team,
+            'start_minute': start_min,
+            'end_minute': end_min,
+            'pass_count': len(team_passes),
+            'score_context': contexts['score'],
+            'phase_context': contexts['phase'],
+            'intensity_context': intensity,
+            'passes': team_passes.to_dict('records')
+        }
     
-    def _get_intensity_contexts(self, df: pd.DataFrame) -> List[Tuple]:
-        """Calculate passing intensity periods"""
-        passes = df[df['type'] == 'Pass']
-        contexts = []
-        
-        for start in range(0, 90, 10):  # 10-minute windows
-            end = min(start + 10, 90)
-            window_passes = passes[
-                (passes['minute'] >= start) & (passes['minute'] < end)
-            ]
-            
-            pass_rate = len(window_passes) / 10  # passes per minute
-            
-            if pass_rate > 15:
-                intensity = 'high'
-            elif pass_rate > 10:
-                intensity = 'medium'
-            else:
-                intensity = 'low'
-            
-            contexts.append((start, end, intensity))
-        
-        return contexts
+    def get_all_windows(self) -> List[Dict]:
+        """Get all context windows from all matches"""
+        all_windows = []
+        for match_windows in self.context_windows.values():
+            all_windows.extend(match_windows)
+        return all_windows

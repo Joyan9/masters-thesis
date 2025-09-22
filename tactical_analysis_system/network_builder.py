@@ -5,56 +5,61 @@ from typing import Dict, List, Tuple
 from .utils import map_coordinates_to_zone
 
 class NetworkBuilder:
-    """Builds passing networks from event data"""
+    """Builds passing networks from context windows"""
     
     def __init__(self):
         self.networks = {}
     
-    def build_contextual_networks(self, events: List[Dict], contexts: Dict, 
-                                 match_id: str) -> Dict:
-        """Build networks for each context period"""
-        df = pd.DataFrame(events)
-        passes = df[df['type'] == 'Pass'].copy()
+    def build_networks_from_windows(self, context_windows: List[Dict]) -> List[Dict]:
+        """Build networks for each context window"""
+        network_data = []
         
-        # Map coordinates to zones
-        passes['origin_zone'] = passes.apply(
-            lambda x: map_coordinates_to_zone(x.get('location', [None, None])[0] if x.get('location') else None,
-                                            x.get('location', [None, None])[1] if x.get('location') else None), 
-            axis=1
+        for window in context_windows:
+            network = self._build_window_network(window)
+            if network:
+                network_data.append({
+                    **window,
+                    'network': network
+                })
+        
+        return network_data
+    
+    def _build_window_network(self, window: Dict) -> nx.Graph:
+        """Build network for a single context window"""
+        passes = window['passes']
+        if not passes:
+            return None
+        
+        df = pd.DataFrame(passes)
+        
+        # Map coordinates to zones with period information
+        df['origin_zone'] = df.apply(
+            lambda row: self._extract_zone_from_location(
+                row.get('location'), row.get('period')
+            ), axis=1
         )
-        passes['dest_zone'] = passes.apply(
-            lambda x: map_coordinates_to_zone(x.get('pass_end_location', [None, None])[0] if x.get('pass_end_location') else None,
-                                            x.get('pass_end_location', [None, None])[1] if x.get('pass_end_location') else None), 
-            axis=1
+        
+        df['dest_zone'] = df.apply(
+            lambda row: self._extract_zone_from_location(
+                row.get('pass_end_location'), row.get('period')
+            ), axis=1
         )
         
         # Remove passes with missing zone data
-        passes = passes.dropna(subset=['origin_zone', 'dest_zone'])
-        passes['minute'] = passes['minute'].fillna(0)
+        df = df.dropna(subset=['origin_zone', 'dest_zone'])
         
-        networks = {}
+        if len(df) == 0:
+            return None
         
-        # Build networks for each context type
-        for context_type, periods in contexts.items():
-            networks[context_type] = {}
-            
-            for start_min, end_min, context_label in periods:
-                # Filter passes in this period
-                period_passes = passes[
-                    (passes['minute'] >= start_min) & 
-                    (passes['minute'] < end_min)
-                ]
-                
-                if len(period_passes) > 0:
-                    network = self._create_network(period_passes)
-                    networks[context_type][context_label] = {
-                        'network': network,
-                        'period': (start_min, end_min),
-                        'pass_count': len(period_passes)
-                    }
+        return self._create_network(df)
+    
+    def _extract_zone_from_location(self, location, period):
+        """Extract zone from location data"""
+        if not location or len(location) < 2:
+            return None
         
-        self.networks[match_id] = networks
-        return networks
+        x, y = location[0], location[1]
+        return map_coordinates_to_zone(x, y, period)
     
     def _create_network(self, passes: pd.DataFrame) -> nx.Graph:
         """Create weighted network from passes"""
