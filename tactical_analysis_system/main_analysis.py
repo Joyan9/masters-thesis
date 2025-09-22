@@ -19,6 +19,10 @@ class MainAnalysis:
         self.network_analyzer = NetworkAnalyzer()
         self.statistical_comparator = StatisticalComparator()
         
+        # centralize results directory here
+        self.results_dir = Path(results_dir="./results/")
+        self.results_dir.mkdir(parents=True, exist_ok=True)
+
         self.results = {}
     
     def create_visualizations(self):
@@ -139,37 +143,38 @@ class MainAnalysis:
     
     def _save_results(self):
         """Save analysis results"""
-        output_dir = Path("results")
-        output_dir.mkdir(exist_ok=True)
-        
+        # use the centralized results_dir
+        output_dir = self.results_dir
+        output_dir.mkdir(parents=True, exist_ok=True)
+
         # Save main results
         self.results['network_metrics'].to_csv(output_dir / "network_metrics.csv", index=False)
-        
+
         # Save statistical results
         with open(output_dir / "statistical_results.json", 'w') as f:
             json.dump(self.results['statistical_results'], f, indent=2, default=str)
-        
+
         # Save report
         with open(output_dir / "analysis_report.txt", 'w') as f:
             f.write(self.results['report'])
-        
+
         print(f"✅ Results saved to {output_dir}/")
-    
+
     def print_summary(self):
         """Print analysis summary"""
         if not self.results:
             print("No results available. Run analysis first.")
             return
-        
+
         print("\nANALYSIS SUMMARY")
         print("=" * 30)
-        
+
         df = self.results['network_metrics']
-        
+
         print(f"Total observations: {len(df)}")
         print(f"Unique matches: {df['match_id'].nunique()}")
         print(f"Unique teams: {df['team'].nunique()}")
-        
+
         print("\nContext distribution:")
         for context_type in ['score_context', 'phase_context', 'intensity_context']:
             if context_type in df.columns:
@@ -177,36 +182,266 @@ class MainAnalysis:
                 counts = df[context_type].value_counts()
                 for label, count in counts.items():
                     print(f"  {label}: {count} ({count/len(df)*100:.1f}%)")
+
+        print(f"\nDetailed report saved to {self.results_dir / 'analysis_report.txt'}")
+
+    def run_rq1_analysis():
+        """Convenience function to run RQ1 analysis"""
+        competitions = [(11, 90)] 
         
-        print(f"\nDetailed report saved to results/analysis_report.txt")
+        # Initialize and run analysis
+        analysis = MainAnalysis(window_size=10, step_size=5, min_passes=20)
 
-def run_rq1_analysis():
-    """Convenience function to run RQ1 analysis"""
-    competitions = [(11, 90)] 
-    
-    # Initialize and run analysis
-    analysis = MainAnalysis(window_size=10, step_size=5, min_passes=20)
+        # Load and analyze
+        results = analysis.run_full_analysis(
+            competitions=[
+                # La Liga
+                (11, 90),   # La Liga 2020/2021
+                (11, 42),   # La Liga 2019/2020
+                # Premier League
+                (2, 27),    # Premier League 2015/2016
+                # Serie A
+                (12, 27),   # Serie A 2015/2016
+            ],
+            max_matches=38, 
+            save_results=True,
+            create_plots=True
+        )
+        
+        # Print summary
+        analysis.print_summary()
+        
+        return analysis, results
 
-    # Load and analyze
-    results = analysis.run_full_analysis(
-        competitions=[
-            # La Liga
-            (11, 90),   # La Liga 2020/2021
-            (11, 42),   # La Liga 2019/2020
-            # Premier League
-            (2, 27),    # Premier League 2015/2016
-            # Serie A
-            (12, 27),   # Serie A 2015/2016
-        ],
-        max_matches=38, 
-        save_results=True,
-        create_plots=True
-    )
-    
-    # Print summary
-    analysis.print_summary()
-    
-    return analysis, results
+    def run_rq2_analysis(self, save_results: bool = True) -> dict:
+        """Run RQ2: Rule-Based Tactical Recommendations"""
+
+        if not self.results or 'network_metrics' not in self.results:
+            raise ValueError("RQ1 results not available. Run RQ1 analysis first.")
+
+        print("\n" + "=" * 60)
+        print("RUNNING RQ2: RULE-BASED TACTICAL RECOMMENDATIONS")
+        print("=" * 60)
+
+        from .tactical_recommender import TacticalRecommender
+
+        # Initialize recommendation system
+        recommender = TacticalRecommender(self.results)
+        recommender.initialize_system(self.results['network_metrics'])
+
+        # Test recommendations on sample data
+        print("\n1. Testing recommendation system...")
+        sample_recommendations = self._test_recommendation_system(recommender)
+
+        # Analyze recommendations for all matches
+        print("\n2. Generating match-level recommendations...")
+        match_recommendations = self._generate_match_recommendations(recommender)
+
+        # Create recommendation report
+        print("\n3. Creating recommendation report...")
+        recommendation_report = self._create_recommendation_report(
+            recommender, sample_recommendations, match_recommendations
+        )
+
+        # Store RQ2 results
+        rq2_results = {
+            'recommender': recommender,
+            'sample_recommendations': sample_recommendations,
+            'match_recommendations': match_recommendations,
+            'recommendation_report': recommendation_report,
+            'system_summary': recommender.get_system_summary()
+        }
+
+        # Save results
+        if save_results:
+            self._save_rq2_results(rq2_results)
+
+        # Add to main results
+        self.results['rq2_results'] = rq2_results
+
+        print(f"\n✅ RQ2 Analysis Complete!")
+        print(f"📊 Generated recommendations for {len(match_recommendations)} match scenarios")
+
+        return rq2_results
+
+    def _test_recommendation_system(self, recommender) -> list[dict]:
+        """Test recommendation system with various scenarios"""
+        
+        test_scenarios = [
+            {
+                'name': 'Low Density Crisis',
+                'metrics': {
+                    'density': 0.025,  # Very low
+                    'clustering_coefficient': 0.020,
+                    'avg_betweenness_centrality': 0.025,
+                    'avg_eigenvector_centrality': 0.100,
+                    'avg_path_length': 4.5,
+                    'centralization': 0.080
+                },
+                'context': {
+                    'score_context': 'trailing',
+                    'phase_context': 'late',
+                    'intensity_context': 'low'
+                }
+            },
+            {
+                'name': 'High Performance',
+                'metrics': {
+                    'density': 0.055,  # High
+                    'clustering_coefficient': 0.045,
+                    'avg_betweenness_centrality': 0.040,
+                    'avg_eigenvector_centrality': 0.110,
+                    'avg_path_length': 3.8,
+                    'centralization': 0.120
+                },
+                'context': {
+                    'score_context': 'leading',
+                    'phase_context': 'middle',
+                    'intensity_context': 'high'
+                }
+            },
+            {
+                'name': 'Average Performance',
+                'metrics': {
+                    'density': 0.038,  # Average
+                    'clustering_coefficient': 0.030,
+                    'avg_betweenness_centrality': 0.032,
+                    'avg_eigenvector_centrality': 0.103,
+                    'avg_path_length': 4.1,
+                    'centralization': 0.098
+                },
+                'context': {
+                    'score_context': 'tied',
+                    'phase_context': 'early',
+                    'intensity_context': 'medium'
+                }
+            }
+        ]
+        
+        test_results = []
+        
+        for scenario in test_scenarios:
+            print(f"   Testing: {scenario['name']}")
+            
+            recommendations = recommender.get_recommendations(
+                scenario['metrics'],
+                scenario['context'],
+                {'scenario_name': scenario['name']}
+            )
+            
+            test_results.append({
+                'scenario': scenario,
+                'recommendations': recommendations
+            })
+        
+        return test_results
+
+    def _generate_match_recommendations(self, recommender) -> list[dict]:
+        """Generate recommendations for sample matches"""
+        
+        # Get unique matches from the dataset
+        if 'match_id' in self.results['network_metrics'].columns:
+            unique_matches = self.results['network_metrics']['match_id'].unique()[:5]  # Sample 5 matches
+            
+            match_recommendations = []
+            
+            for match_id in unique_matches:
+                print(f"   Analyzing match: {match_id}")
+                
+                match_data = self.results['network_metrics'][
+                    self.results['network_metrics']['match_id'] == match_id
+                ]
+                
+                match_analysis = recommender.analyze_match_recommendations(
+                    match_data, str(match_id)
+                )
+                
+                match_recommendations.append(match_analysis)
+            
+            return match_recommendations
+        
+        return []
+
+    def _create_recommendation_report(self, recommender, sample_recs, match_recs) -> str:
+        """Create comprehensive recommendation report"""
+        
+        report_lines = [
+            "TACTICAL RECOMMENDATION SYSTEM REPORT",
+            "=" * 50,
+            "",
+            "SYSTEM OVERVIEW:",
+            f"- Total Rules: {len(recommender.rule_engine.rules)}",
+            f"- Threshold Metrics: {len(recommender.threshold_analyzer.thresholds)}",
+            f"- Test Scenarios: {len(sample_recs)}",
+            f"- Match Analyses: {len(match_recs)}",
+            "",
+            "KEY FINDINGS FROM RQ1 INTEGRATION:",
+            "- Match intensity is the strongest predictor of network structure",
+            "- High intensity increases network density by 117%",
+            "- Rules leverage this relationship for tactical recommendations",
+            "",
+            "SAMPLE RECOMMENDATION SCENARIOS:",
+        ]
+        
+        # Add sample scenarios
+        for i, test in enumerate(sample_recs, 1):
+            scenario = test['scenario']
+            recs = test['recommendations']
+            
+            report_lines.extend([
+                f"\n{i}. {scenario['name']}:",
+                f"   Context: {scenario['context']}",
+                f"   Recommendations: {len(recs['recommendations'])}",
+            ])
+            
+            if recs['recommendations']:
+                primary_rec = recs['recommendations'][0]
+                report_lines.append(f"   Primary: {primary_rec['action']}")
+                report_lines.append(f"   Confidence: {primary_rec['confidence']} ({primary_rec['confidence_score']:.2f})")
+        
+        # Add match analysis summary
+        if match_recs:
+            report_lines.extend([
+                "",
+                "MATCH ANALYSIS SUMMARY:",
+            ])
+            
+            total_critical_periods = sum(
+                len(match['match_analysis']['critical_periods']) 
+                for match in match_recs
+            )
+            
+            report_lines.append(f"- Total critical periods identified: {total_critical_periods}")
+            
+            # Most common recommendations across matches
+            all_rec_types = []
+            for match in match_recs:
+                for rec_type, count in match['match_analysis']['most_common_recommendations'].items():
+                    all_rec_types.extend([rec_type] * count)
+            
+            if all_rec_types:
+                from collections import Counter
+                common_recs = Counter(all_rec_types).most_common(3)
+                report_lines.append("- Most common recommendation types:")
+                for rec_type, count in common_recs:
+                    report_lines.append(f"  * {rec_type}: {count} instances")
+        
+        return "\n".join(report_lines)
+
+    def _save_rq2_results(self, rq2_results: dict):
+        """Save RQ2 results to files"""
+        # save into the same centralized results_dir
+        self.results_dir.mkdir(parents=True, exist_ok=True)
+
+        report_path = self.results_dir / "rq2_recommendation_report.txt"
+        with open(report_path, 'w') as f:
+            f.write(rq2_results['recommendation_report'])
+
+        summary_path = self.results_dir / "rq2_system_summary.json"
+        with open(summary_path, 'w') as f:
+            json.dump(rq2_results['system_summary'], f, indent=2)
+
+        print(f"RQ2 results saved to {self.results_dir}")
 
 if __name__ == "__main__":
     analysis, results = run_rq1_analysis()
