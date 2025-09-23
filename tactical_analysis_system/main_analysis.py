@@ -1,5 +1,6 @@
 import json
 import pandas as pd
+from typing import Dict, List, Tuple, Any, Optional
 from pathlib import Path
 from .data_loader import DataLoader
 from .context_analyzer import ContextAnalyzer
@@ -12,18 +13,27 @@ from .visualizer import RQ1Visualizer
 class MainAnalysis:
     """Main analysis pipeline for RQ1: Contextual Network Analysis"""
     
-    def __init__(self, window_size=10, step_size=5, min_passes=20):
-        self.data_loader = DataLoader()
-        self.context_analyzer = ContextAnalyzer(window_size, step_size, min_passes)
-        self.network_builder = NetworkBuilder()
-        self.network_analyzer = NetworkAnalyzer()
-        self.statistical_comparator = StatisticalComparator()
+    def __init__(self, use_saved_data: bool = True, data_file: str = "sb_open_2018_19.json"):
+        """Initialize analysis system
         
-        # centralize results directory here
-        self.results_dir = Path(results_dir="./results/")
-        self.results_dir.mkdir(parents=True, exist_ok=True)
-
+        Args:
+            use_saved_data: If True, load from saved JSON file
+            data_file: Path to saved data file
+        """
         self.results = {}
+        self.network_analyzer = None
+        self.data_loader = DataLoader()
+        
+        if use_saved_data:
+            try:
+                self.data_loader.load_from_json(data_file)
+                print(f"✅ Using saved data from {data_file}")
+            except FileNotFoundError:
+                print(f"❌ Saved data file {data_file} not found. Please run data collection first.")
+                print("Example: python collect_data.py")
+                raise
+        else:
+            print("⚠️  Will load data from API (slower)")
     
     def create_visualizations(self):
         """Create comprehensive visualizations for RQ1"""
@@ -185,9 +195,16 @@ class MainAnalysis:
 
         print(f"\nDetailed report saved to {self.results_dir / 'analysis_report.txt'}")
 
-    def run_rq1_analysis():
-        """Convenience function to run RQ1 analysis"""
-        competitions = [(11, 90)] 
+    def run_rq1_analysis(self, save_results: bool = True) -> Dict:
+        """Run RQ1 analysis using pre-loaded data"""
+        print("RUNNING RQ1: NETWORK ANALYSIS")
+        print("=" * 60)
+        
+        # Use pre-loaded data instead of loading from API
+        if self.data_loader.matches_data.empty:
+            raise ValueError("No data loaded. Please load data first.")
+        
+        self.network_analyzer = NetworkAnalyzer(self.data_loader)
         
         # Initialize and run analysis
         analysis = MainAnalysis(window_size=10, step_size=5, min_passes=20)
@@ -442,6 +459,231 @@ class MainAnalysis:
             json.dump(rq2_results['system_summary'], f, indent=2)
 
         print(f"RQ2 results saved to {self.results_dir}")
+    
+    def run_rq3_analysis(self, save_results: bool = True) -> Dict:
+        """Run RQ3: Recommendation Validation"""
+        
+        if not self.results or 'rq2_results' not in self.results:
+            raise ValueError("RQ2 results not available. Run RQ2 analysis first.")
+        
+        print("\n" + "="*60)
+        print("RUNNING RQ3: RECOMMENDATION VALIDATION")
+        print("="*60)
+        
+        from .recommendation_validator import RecommendationValidator
+        from .counterfactual_analyzer import CounterfactualAnalyzer
+        
+        # Get RQ2 data
+        rq2_results = self.results['rq2_results']
+        recommendations_data = rq2_results.get('match_recommendations', [])
+        
+        if not recommendations_data:
+            raise ValueError("No recommendation data available from RQ2")
+        
+        # 1. Run validation analysis
+        print("\n1. Running recommendation validation...")
+        validator = RecommendationValidator(
+            self.results['network_metrics'], 
+            recommendations_data
+        )
+        validation_results = validator.run_comprehensive_validation()
+        
+        # 2. Run counterfactual analysis
+        print("\n2. Running counterfactual analysis...")
+        counterfactual_analyzer = CounterfactualAnalyzer(
+            self.results['network_metrics'],
+            recommendations_data
+        )
+        counterfactual_results = counterfactual_analyzer.run_counterfactual_analysis()
+        
+        # 3. Create comprehensive validation report
+        print("\n3. Creating validation report...")
+        validation_report = self._create_rq3_report(
+            validation_results, counterfactual_results
+        )
+        
+        # Store RQ3 results
+        rq3_results = {
+            'validation_results': validation_results,
+            'counterfactual_results': counterfactual_results,
+            'validation_report': validation_report,
+            'validator': validator,
+            'counterfactual_analyzer': counterfactual_analyzer
+        }
+        
+        # Save results
+        if save_results:
+            self._save_rq3_results(rq3_results)
+        
+        # Add to main results
+        self.results['rq3_results'] = rq3_results
+        
+        print(f"\n✅ RQ3 Analysis Complete!")
+        print(f"📊 Validation Score: {validation_results['overall_validation_score']['overall_validation_score']:.3f}")
+        
+        return rq3_results
+
+    def _create_rq3_report(self, validation_results: Dict, 
+                        counterfactual_results: Dict) -> str:
+        """Create comprehensive RQ3 validation report"""
+        
+        report_lines = [
+            "RQ3: RECOMMENDATION VALIDATION ANALYSIS REPORT",
+            "=" * 60,
+            "",
+            "EXECUTIVE SUMMARY:",
+            f"Overall Validation Score: {validation_results['overall_validation_score']['overall_validation_score']:.3f}",
+            f"Interpretation: {validation_results['overall_validation_score']['validation_interpretation']}",
+            "",
+            "KEY FINDINGS:",
+        ]
+        
+        # Add key findings from validation
+        overall_score = validation_results['overall_validation_score']['overall_validation_score']
+        if overall_score >= 0.7:
+            report_lines.append("✅ STRONG VALIDATION: Recommendations show high effectiveness")
+        elif overall_score >= 0.6:
+            report_lines.append("✅ MODERATE VALIDATION: Recommendations show good effectiveness")
+        else:
+            report_lines.append("⚠️  WEAK VALIDATION: Recommendations need improvement")
+        
+        # Add component analysis
+        report_lines.extend([
+            "",
+            "COMPONENT ANALYSIS:",
+        ])
+        
+        component_scores = validation_results['overall_validation_score']['component_scores']
+        for component, score in component_scores.items():
+            status = "✅" if score >= 0.6 else "⚠️" if score >= 0.4 else "❌"
+            report_lines.append(f"{status} {component.replace('_', ' ').title()}: {score:.3f}")
+        
+        # Add counterfactual findings
+        if 'impact_analysis' in counterfactual_results:
+            impact = counterfactual_results['impact_analysis']
+            improvement_rate = impact.get('overall_improvement_rate', 0)
+            
+            report_lines.extend([
+                "",
+                "COUNTERFACTUAL ANALYSIS:",
+                f"Overall Improvement Rate: {improvement_rate:.1%}",
+            ])
+            
+            if improvement_rate > 0.6:
+                report_lines.append("✅ High likelihood of performance improvement")
+            elif improvement_rate > 0.4:
+                report_lines.append("✅ Moderate likelihood of performance improvement")
+            else:
+                report_lines.append("⚠️  Low likelihood of performance improvement")
+        
+        # Add detailed validation findings
+        report_lines.extend([
+            "",
+            "DETAILED VALIDATION RESULTS:",
+            "",
+            "1. PERFORMANCE OUTCOME ANALYSIS:",
+        ])
+        
+        if 'performance_outcomes' in validation_results:
+            outcome_analysis = validation_results['performance_outcomes']
+            if 'correlation_analysis' in outcome_analysis:
+                report_lines.append("   Network Metric Correlations with Improvements:")
+                for metric, analysis in outcome_analysis['correlation_analysis'].items():
+                    if isinstance(analysis, dict):
+                        conf_corr = analysis.get('confidence_vs_improvement', 0)
+                        status = "✅" if abs(conf_corr) > 0.3 else "⚠️" if abs(conf_corr) > 0.1 else "❌"
+                        report_lines.append(f"   {status} {metric}: {conf_corr:.3f}")
+        
+        # Add temporal consistency
+        if 'temporal_consistency' in validation_results:
+            temporal = validation_results['temporal_consistency']
+            consistency = temporal.get('overall_consistency', 0)
+            report_lines.extend([
+                "",
+                "2. TEMPORAL CONSISTENCY:",
+                f"   Overall Consistency: {consistency:.3f}",
+                f"   Contexts Analyzed: {temporal.get('total_contexts_analyzed', 0)}"
+            ])
+        
+        # Add context sensitivity
+        if 'context_sensitivity' in validation_results:
+            context = validation_results['context_sensitivity']
+            sensitivity = context.get('overall_sensitivity', 0)
+            interpretation = context.get('sensitivity_interpretation', 'Unknown')
+            report_lines.extend([
+                "",
+                "3. CONTEXT SENSITIVITY:",
+                f"   Sensitivity Score: {sensitivity:.3f}",
+                f"   Interpretation: {interpretation}"
+            ])
+        
+        # Add model performance
+        if 'model_performance' in counterfactual_results:
+            model_perf = counterfactual_results['model_performance']
+            overall_quality = model_perf.get('overall_quality', 0)
+            total_models = model_perf.get('total_models', 0)
+            
+            report_lines.extend([
+                "",
+                "4. PREDICTIVE MODEL PERFORMANCE:",
+                f"   Overall Model Quality: {overall_quality:.3f}",
+                f"   Total Models Built: {total_models}",
+            ])
+            
+            if overall_quality > 0.7:
+                report_lines.append("   ✅ High-quality predictive models")
+            elif overall_quality > 0.5:
+                report_lines.append("   ✅ Moderate-quality predictive models")
+            else:
+                report_lines.append("   ⚠️  Low-quality predictive models")
+        
+        # Add recommendations for improvement
+        report_lines.extend([
+            "",
+            "RECOMMENDATIONS FOR SYSTEM IMPROVEMENT:",
+        ])
+        
+        if overall_score < 0.6:
+            report_lines.extend([
+                "- Refine rule thresholds based on validation findings",
+                "- Improve context sensitivity of recommendations",
+                "- Enhance confidence calibration mechanisms"
+            ])
+        elif overall_score < 0.8:
+            report_lines.extend([
+                "- Fine-tune recommendation timing",
+                "- Improve prediction accuracy for edge cases",
+                "- Enhance recommendation specificity"
+            ])
+        else:
+            report_lines.extend([
+                "- System shows strong validation",
+                "- Consider deployment for real-world testing",
+                "- Monitor performance in live scenarios"
+            ])
+        
+        return "\n".join(report_lines)
+
+    def _save_rq3_results(self, rq3_results: Dict):
+        """Save RQ3 results to files"""
+        
+        # Save validation report
+        report_path = self.results_dir / "rq3_validation_report.txt"
+        with open(report_path, 'w') as f:
+            f.write(rq3_results['validation_report'])
+        
+        # Save validation summary
+        validation_summary = {
+            'overall_score': rq3_results['validation_results']['overall_validation_score']['overall_validation_score'],
+            'interpretation': rq3_results['validation_results']['overall_validation_score']['validation_interpretation'],
+            'component_scores': rq3_results['validation_results']['overall_validation_score']['component_scores']
+        }
+        
+        summary_path = self.results_dir / "rq3_validation_summary.json"
+        with open(summary_path, 'w') as f:
+            json.dump(validation_summary, f, indent=2)
+        
+        print(f"📁 RQ3 results saved to {self.results_dir}")
 
 if __name__ == "__main__":
     analysis, results = run_rq1_analysis()

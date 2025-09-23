@@ -7,6 +7,8 @@ from .main_analysis import MainAnalysis, run_rq1_analysis
 from .threshold_analyzer import ThresholdAnalyzer
 from .rule_engine import RuleEngine, TacticalRecommendation, ConfidenceLevel, RecommendationType
 from .tactical_recommender import TacticalRecommender
+from .recommendation_validator import RecommendationValidator
+from .counterfactual_analyzer import CounterfactualAnalyzer
 from .utils import map_coordinates_to_zone, create_sliding_windows, get_context_label
 
 __all__ = [
@@ -26,5 +28,7 @@ __all__ = [
     'TacticalRecommendation',
     'ConfidenceLevel',
     'RecommendationType',
-    'TacticalRecommender'
+    'TacticalRecommender',
+    'RecommendationValidator',
+    'CounterfactualAnalyzer'
 ]

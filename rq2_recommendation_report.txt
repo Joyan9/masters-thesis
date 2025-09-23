@@ -2,8 +2,8 @@ TACTICAL RECOMMENDATION SYSTEM REPORT
 ==================================================
 
 SYSTEM OVERVIEW:
-- Total Rules: 12
-- Threshold Metrics: 9
+- Total Rules: 5
+- Threshold Metrics: 6
 - Test Scenarios: 3
 - Match Analyses: 5
 
@@ -16,25 +16,20 @@ SAMPLE RECOMMENDATION SCENARIOS:
 
 1. Low Density Crisis:
    Context: {'score_context': 'trailing', 'phase_context': 'late', 'intensity_context': 'low'}
-   Recommendations: 3
-   Primary: Urgent attacking tempo with direct play and wing focus
-   Confidence: very_high (1.00)
+   Recommendations: 2
+   Primary: EMERGENCY: All players forward, maximum attacking commitment
+   Confidence: very_high (0.98)
 
 2. High Performance:
    Context: {'score_context': 'leading', 'phase_context': 'middle', 'intensity_context': 'high'}
-   Recommendations: 3
-   Primary: Maintain possession through central areas
-   Confidence: very_high (0.98)
+   Recommendations: 0
 
 3. Average Performance:
    Context: {'score_context': 'tied', 'phase_context': 'early', 'intensity_context': 'medium'}
-   Recommendations: 1
-   Primary: Create more direct passing lanes and reduce ball circulation
-   Confidence: very_high (0.90)
+   Recommendations: 0
 
 MATCH ANALYSIS SUMMARY:
-- Total critical periods identified: 48
+- Total critical periods identified: 167
 - Most common recommendation types:
-  * tempo: 119 instances
-  * spatial: 31 instances
-  * connectivity: 17 instances
+  * tempo: 163 instances
+  * none: 4 instances

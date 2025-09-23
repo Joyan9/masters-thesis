@@ -6,8 +6,12 @@ analysis = MainAnalysis()
 
 # Run RQ1 first
 rq1_results = analysis.run_full_analysis(
-    competitions=[(2, 27)],
-    max_matches=5,
+    competitions=[
+                (11, 90),   # La Liga 2020/2021
+                (2, 27),    # Premier League 2015/2016
+                (12, 27),   # Serie A 2015/2016
+            ],
+    max_matches=1140,
     save_results=True,
     create_plots=True
 )

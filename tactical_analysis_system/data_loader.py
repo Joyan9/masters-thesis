@@ -51,15 +51,32 @@ class DataLoader:
         print(f"   - Matches: {len(self.matches)}")
         print(f"   - Events: {len(self.events)}")
 
-    def load_saved_data(self, filename):
-        """Load previously saved data"""
-        with open(filename, 'r') as f:
+    def load_from_json(self, filepath: str) -> 'DataLoader':
+        """Load previously saved data from JSON file"""
+        import json
+        from pathlib import Path
+        
+        if not Path(filepath).exists():
+            raise FileNotFoundError(f"Data file not found: {filepath}")
+        
+        print(f"Loading data from {filepath}...")
+        
+        with open(filepath, 'r') as f:
             data = json.load(f)
         
-        self.matches = data['matches']
-        self.events = data['events']
+        # Reconstruct DataLoader object
+        self.matches_data = pd.DataFrame(data['matches_data']) if data['matches_data'] else pd.DataFrame()
+        self.events_data = pd.DataFrame(data['events_data']) if data['events_data'] else pd.DataFrame()
+        self.lineups_data = pd.DataFrame(data['lineups_data']) if data['lineups_data'] else pd.DataFrame()
         
-        print(f"✅ Data loaded from {filename}")
-        print(f"   - Matches: {len(self.matches)}")
-        print(f"   - Events: {len(self.events)}")
-        print(f"   - Saved on: {data.get('timestamp', 'Unknown')}")
+        # Convert datetime columns back
+        if not self.matches_data.empty and 'match_date' in self.matches_data.columns:
+            self.matches_data['match_date'] = pd.to_datetime(self.matches_data['match_date'])
+        
+        if not self.events_data.empty and 'timestamp' in self.events_data.columns:
+            self.events_data['timestamp'] = pd.to_datetime(self.events_data['timestamp'])
+        
+        print(f"✅ Loaded {len(self.matches_data)} matches, {len(self.events_data)} events, {len(self.lineups_data)} lineups")
+        
+        return self
+
