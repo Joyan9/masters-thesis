@@ -116,7 +116,7 @@ class MainAnalysis:
         ]
         
         # Load specific competition data
-        self.data_loader.load_data(competitions, max_matches=38)
+        self.data_loader.load_data(competitions, max_matches=50)
         
         # Step 2: Extract context windows
         print("\n2. Extracting context windows...")
@@ -198,8 +198,6 @@ class MainAnalysis:
         self.print_summary()
         
         return self.results
-
-    # Remove the old run_full_analysis method since it's redundant
     
     def _save_results(self):
         """Save analysis results"""

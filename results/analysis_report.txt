@@ -73,7 +73,7 @@ Density:
   Effect size: η² = 0.016 (small)
 
 Clustering Coefficient:
-  Kruskal-Wallis: χ²/F = 3.979, p = 0.137  (ns)
+  Kruskal-Wallis: χ²/F = 3.980, p = 0.137  (ns)
   Effect size: η² = 0.002 (negligible)
 
 Avg Betweenness Centrality:

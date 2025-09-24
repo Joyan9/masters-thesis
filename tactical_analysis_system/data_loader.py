@@ -18,7 +18,6 @@ class DataLoader:
     
     def load_data(self, competitions, max_matches=None, batch_size=50, save_interval=None):
         """Load matches and events data in batches"""
-        print("Loading matches and events for context analysis...")
         
         # Load matches first
         for comp_id, season_id in competitions:

@@ -29,7 +29,6 @@ def main():
         print(f"📊 Data summary:")
         print(f"   - Matches: {len(analysis.data_loader.matches_data)}")
         print(f"   - Events: {len(analysis.data_loader.events_data)}")
-        print(f"   - Lineups: {len(analysis.data_loader.lineups_data)}")
         
         # Run analyses
         print("\nRunning RQ1 Analysis...")
@@ -43,10 +42,6 @@ def main():
         
         print("\n" + "="*60)
         print("ANALYSIS COMPLETE")
-        print("="*60)
-        print(f"RQ1 Score: {rq1_results.get('overall_score', 'N/A')}")
-        print(f"RQ2 Score: {rq2_results.get('overall_score', 'N/A')}")
-        print(f"RQ3 Score: {rq3_results.get('overall_score', 'N/A')}")
         
     except Exception as e:
         print(f"❌ Error during analysis: {e}")
