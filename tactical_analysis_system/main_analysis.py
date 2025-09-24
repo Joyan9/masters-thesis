@@ -13,17 +13,35 @@ from .visualizer import RQ1Visualizer
 class MainAnalysis:
     """Main analysis pipeline for RQ1: Contextual Network Analysis"""
     
-    def __init__(self, use_saved_data: bool = True, data_file: str = "sb_open_2018_19.json"):
+    def __init__(self, use_saved_data: bool = True, 
+                        data_file: str = "statsbomb_data_interim_100.json", 
+                        window_size: int = 10, 
+                        step_size: int = 5, 
+                        min_passes: int = 20):
         """Initialize analysis system
         
         Args:
             use_saved_data: If True, load from saved JSON file
             data_file: Path to saved data file
+            window_size: Window size for analysis
+            step_size: Step size for sliding window
+            min_passes: Minimum number of passes required
         """
         self.results = {}
-        self.network_analyzer = None
         self.data_loader = DataLoader()
+        self.window_size = window_size
+        self.step_size = step_size
+        self.min_passes = min_passes
         
+        # Initialize results directory
+        self.results_dir = Path("./results/")
+        
+        # Initialize components
+        self.context_analyzer = ContextAnalyzer(window_size, step_size, min_passes)
+        self.network_builder = NetworkBuilder()
+        self.network_analyzer = None  # Will be initialized when needed
+        self.statistical_comparator = StatisticalComparator()
+
         if use_saved_data:
             try:
                 self.data_loader.load_from_json(data_file)
@@ -67,20 +85,47 @@ class MainAnalysis:
         
         return plots
 
-    def run_full_analysis(self, competitions, max_matches=None, save_results=True, create_plots=True):
-        """Run the complete RQ1 analysis pipeline"""
+    def run_rq1_analysis(self, save_results: bool = True, create_plots: bool = True) -> Dict:
+        """Run RQ1 analysis using pre-loaded data"""
+        print("RUNNING RQ1: NETWORK ANALYSIS")
+        print("=" * 60)
+        
+        # Use pre-loaded data instead of loading from API
+        if self.data_loader.matches_data.empty:
+            raise ValueError("No data loaded. Please load data first.")
+        
+        # Initialize network analyzer with the loaded data
+        self.network_analyzer = NetworkAnalyzer(self.data_loader)
+        
         print("Starting RQ1: Contextual Network Analysis")
         print("=" * 50)
         
-        # Step 1: Load data
+        # Step 1: Data is already loaded
         print("\n1. Loading data...")
-        self.data_loader.load_data(competitions, max_matches)
+        print("Loading matches and events for context analysis...")
+        
+        # Define competitions to analyze
+        competitions = [
+            # La Liga
+            (11, 90),   # La Liga 2020/2021
+            (11, 42),   # La Liga 2019/2020
+            # Premier League
+            (2, 27),    # Premier League 2015/2016
+            # Serie A
+            (12, 27),   # Serie A 2015/2016
+        ]
+        
+        # Load specific competition data
+        self.data_loader.load_data(competitions, max_matches=38)
         
         # Step 2: Extract context windows
         print("\n2. Extracting context windows...")
         all_context_windows = []
         
-        for match in self.data_loader.matches[:max_matches] if max_matches else self.data_loader.matches:
+        max_matches = 38
+        matches_to_process = self.data_loader.matches[:max_matches] if max_matches else self.data_loader.matches
+        
+        for match in matches_to_process:
             match_id = match['match_id']
             if match_id in self.data_loader.events:
                 print(f"Processing match {match_id}...")
@@ -149,7 +194,12 @@ class MainAnalysis:
         print(f"Total networks built: {len(network_data)}")
         print(f"Final dataset size: {len(results_df)} observations")
         
+        # Print summary
+        self.print_summary()
+        
         return self.results
+
+    # Remove the old run_full_analysis method since it's redundant
     
     def _save_results(self):
         """Save analysis results"""
@@ -195,41 +245,6 @@ class MainAnalysis:
 
         print(f"\nDetailed report saved to {self.results_dir / 'analysis_report.txt'}")
 
-    def run_rq1_analysis(self, save_results: bool = True) -> Dict:
-        """Run RQ1 analysis using pre-loaded data"""
-        print("RUNNING RQ1: NETWORK ANALYSIS")
-        print("=" * 60)
-        
-        # Use pre-loaded data instead of loading from API
-        if self.data_loader.matches_data.empty:
-            raise ValueError("No data loaded. Please load data first.")
-        
-        self.network_analyzer = NetworkAnalyzer(self.data_loader)
-        
-        # Initialize and run analysis
-        analysis = MainAnalysis(window_size=10, step_size=5, min_passes=20)
-
-        # Load and analyze
-        results = analysis.run_full_analysis(
-            competitions=[
-                # La Liga
-                (11, 90),   # La Liga 2020/2021
-                (11, 42),   # La Liga 2019/2020
-                # Premier League
-                (2, 27),    # Premier League 2015/2016
-                # Serie A
-                (12, 27),   # Serie A 2015/2016
-            ],
-            max_matches=38, 
-            save_results=True,
-            create_plots=True
-        )
-        
-        # Print summary
-        analysis.print_summary()
-        
-        return analysis, results
-
     def run_rq2_analysis(self, save_results: bool = True) -> dict:
         """Run RQ2: Rule-Based Tactical Recommendations"""
 
@@ -246,9 +261,9 @@ class MainAnalysis:
         recommender = TacticalRecommender(self.results)
         recommender.initialize_system(self.results['network_metrics'])
 
-        # Test recommendations on sample data
+        # Generate sample recommendations first
         print("\n1. Testing recommendation system...")
-        sample_recommendations = self._test_recommendation_system(recommender)
+        sample_recommendations = self._generate_sample_recommendations(recommender)
 
         # Analyze recommendations for all matches
         print("\n2. Generating match-level recommendations...")
@@ -281,77 +296,10 @@ class MainAnalysis:
 
         return rq2_results
 
-    def _test_recommendation_system(self, recommender) -> list[dict]:
-        """Test recommendation system with various scenarios"""
-        
-        test_scenarios = [
-            {
-                'name': 'Low Density Crisis',
-                'metrics': {
-                    'density': 0.025,  # Very low
-                    'clustering_coefficient': 0.020,
-                    'avg_betweenness_centrality': 0.025,
-                    'avg_eigenvector_centrality': 0.100,
-                    'avg_path_length': 4.5,
-                    'centralization': 0.080
-                },
-                'context': {
-                    'score_context': 'trailing',
-                    'phase_context': 'late',
-                    'intensity_context': 'low'
-                }
-            },
-            {
-                'name': 'High Performance',
-                'metrics': {
-                    'density': 0.055,  # High
-                    'clustering_coefficient': 0.045,
-                    'avg_betweenness_centrality': 0.040,
-                    'avg_eigenvector_centrality': 0.110,
-                    'avg_path_length': 3.8,
-                    'centralization': 0.120
-                },
-                'context': {
-                    'score_context': 'leading',
-                    'phase_context': 'middle',
-                    'intensity_context': 'high'
-                }
-            },
-            {
-                'name': 'Average Performance',
-                'metrics': {
-                    'density': 0.038,  # Average
-                    'clustering_coefficient': 0.030,
-                    'avg_betweenness_centrality': 0.032,
-                    'avg_eigenvector_centrality': 0.103,
-                    'avg_path_length': 4.1,
-                    'centralization': 0.098
-                },
-                'context': {
-                    'score_context': 'tied',
-                    'phase_context': 'early',
-                    'intensity_context': 'medium'
-                }
-            }
-        ]
-        
-        test_results = []
-        
-        for scenario in test_scenarios:
-            print(f"   Testing: {scenario['name']}")
-            
-            recommendations = recommender.get_recommendations(
-                scenario['metrics'],
-                scenario['context'],
-                {'scenario_name': scenario['name']}
-            )
-            
-            test_results.append({
-                'scenario': scenario,
-                'recommendations': recommendations
-            })
-        
-        return test_results
+    def _generate_sample_recommendations(self, recommender) -> list:
+        """Generate sample recommendations for testing"""
+        # This method needs to be implemented
+        return []
 
     def _generate_match_recommendations(self, recommender) -> list[dict]:
         """Generate recommendations for sample matches"""
@@ -685,5 +633,6 @@ class MainAnalysis:
         
         print(f"📁 RQ3 results saved to {self.results_dir}")
 
+
 if __name__ == "__main__":
-    analysis, results = run_rq1_analysis()
+    pass

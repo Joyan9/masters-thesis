@@ -6,7 +6,8 @@ from typing import Dict, List
 class NetworkAnalyzer:
     """Calculates network metrics for contextual analysis"""
     
-    def __init__(self):
+    def __init__(self, data_loader):
+        self.data_loader = data_loader
         self.results = {}
     
     def analyze_contextual_networks(self, networks: Dict, match_id: str) -> pd.DataFrame:
