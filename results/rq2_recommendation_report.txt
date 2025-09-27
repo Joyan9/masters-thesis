@@ -4,7 +4,6 @@ TACTICAL RECOMMENDATION SYSTEM REPORT
 SYSTEM OVERVIEW:
 - Total Rules: 5
 - Threshold Metrics: 6
-- Test Scenarios: 0
 - Match Analyses: 5
 
 KEY FINDINGS FROM RQ1 INTEGRATION:
@@ -12,10 +11,8 @@ KEY FINDINGS FROM RQ1 INTEGRATION:
 - High intensity increases network density by 117%
 - Rules leverage this relationship for tactical recommendations
 
-SAMPLE RECOMMENDATION SCENARIOS:
-
 MATCH ANALYSIS SUMMARY:
-- Total critical periods identified: 159
+- Total critical periods identified: 167
 - Most common recommendation types:
-  * tempo: 133 instances
-  * none: 26 instances
+  * tempo: 163 instances
+  * none: 4 instances
