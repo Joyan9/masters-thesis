@@ -7,6 +7,75 @@ import warnings
 warnings.filterwarnings("ignore")
 
 class RQ1Visualizer:
+
+    def plot_winning_vs_losing_networks(self, network_data, context_col='score_context', save_plot=True, output_filename='winning_vs_losing_networks.png'):
+        """
+        Create a side-by-side visualization of passing networks for winning vs. losing contexts.
+        Args:
+            network_data: List of dicts, each with keys including 'network' (nx.Graph), 'score_context', etc.
+            context_col: The context column to split on (default: 'score_context').
+            save_plot: Whether to save the plot to file.
+            output_filename: Name of the output file.
+        """
+        import networkx as nx
+        # Filter for winning and losing contexts
+        win_networks = [d['network'] for d in network_data if d.get(context_col) == 'leading' and d['network'] is not None]
+        lose_networks = [d['network'] for d in network_data if d.get(context_col) == 'trailing' and d['network'] is not None]
+
+        # Aggregate networks (sum edge weights)
+        def aggregate_networks(networks):
+            G_agg = nx.Graph()
+            for G in networks:
+                for u, v, d in G.edges(data=True):
+                    w = d.get('weight', 1)
+                    if G_agg.has_edge(u, v):
+                        G_agg[u][v]['weight'] += w
+                    else:
+                        G_agg.add_edge(u, v, weight=w)
+            # Add all nodes (0-48 for 7x7 grid)
+            for n in range(49):
+                if n not in G_agg:
+                    G_agg.add_node(n)
+            return G_agg
+
+        G_win = aggregate_networks(win_networks)
+        G_lose = aggregate_networks(lose_networks)
+
+        # Grid layout for 7x7
+        pos = {i: (i % 7, i // 7) for i in range(49)}
+
+        fig, axes = plt.subplots(1, 2, figsize=(18, 8))
+        for ax, G, title in zip(axes, [G_win, G_lose], ['Winning Contexts', 'Losing Contexts']):
+            ax.set_aspect('equal')
+            # Draw nodes
+            nx.draw_networkx_nodes(G, pos, ax=ax, node_size=350, node_color='lightblue', edgecolors='black', linewidths=0.6)
+            # Draw edges with thickness proportional to weight
+            edges = G.edges(data=True)
+            weights = [edge[2]['weight'] for edge in edges]
+            max_weight = max(weights) if weights else 1
+            for u, v, d in edges:
+                nx.draw_networkx_edges(
+                    G, pos, [(u, v)],
+                    width=(d['weight'] / max_weight) * 3,
+                    alpha=0.6,
+                    ax=ax
+                )
+            # Draw zone labels
+            for node_id, (x, y) in pos.items():
+                ax.text(x, y, str(node_id), ha='center', va='center', fontsize=8, fontweight='bold', bbox=dict(boxstyle='circle', facecolor='white', alpha=0.9, linewidth=0.4))
+            ax.set_title(title, fontweight='bold', fontsize=15)
+            ax.set_xlim(-0.5, 6.5)
+            ax.set_ylim(-0.5, 6.5)
+            ax.axis('off')
+
+        plt.suptitle('Passing Networks: Winning vs. Losing Contexts', fontsize=18, fontweight='bold')
+        plt.tight_layout()
+        if save_plot:
+            out_path = self.output_dir / output_filename
+            plt.savefig(out_path, dpi=300, bbox_inches='tight')
+            print(f"Side-by-side network plot saved to {out_path}")
+        plt.show()
+        return fig, axes
     """Comprehensive visualization for RQ1: Contextual Network Analysis"""
     
     def __init__(self, style='whitegrid', palette='Set2', figsize=(12, 8)):

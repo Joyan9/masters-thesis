@@ -85,120 +85,133 @@ class MainAnalysis:
         
         return plots
 
-    def run_rq1_analysis(self, save_results: bool = True, create_plots: bool = True) -> Dict:
-        """Run RQ1 analysis using pre-loaded data"""
-        print("RUNNING RQ1: NETWORK ANALYSIS")
-        print("=" * 60)
-        
-        # Use pre-loaded data instead of loading from API
-        if self.data_loader.matches_data.empty:
-            raise ValueError("No data loaded. Please load data first.")
-        
-        # Initialize network analyzer with the loaded data
-        self.network_analyzer = NetworkAnalyzer(self.data_loader)
-        
-        print("Starting RQ1: Contextual Network Analysis")
-        print("=" * 50)
-        
-        # Step 1: Data is already loaded
-        print("\n1. Loading data...")
-        print("Loading matches and events for context analysis...")
-        
-        # Define competitions to analyze
-        competitions = [
-            # La Liga
-            (11, 90),   # La Liga 2020/2021
-            (11, 42),   # La Liga 2019/2020
-            # Premier League
-            (2, 27),    # Premier League 2015/2016
-            # Serie A
-            (12, 27),   # Serie A 2015/2016
-        ]
-        
-        # Load specific competition data
-        self.data_loader.load_data(competitions, max_matches=50)
-        
-        # Step 2: Extract context windows
-        print("\n2. Extracting context windows...")
-        all_context_windows = []
-        
-        max_matches = 38
-        matches_to_process = self.data_loader.matches[:max_matches] if max_matches else self.data_loader.matches
-        
-        for match in matches_to_process:
-            match_id = match['match_id']
-            if match_id in self.data_loader.events:
-                print(f"Processing match {match_id}...")
-                windows = self.context_analyzer.extract_context_windows(
-                    self.data_loader.events[match_id], match_id
-                )
-                all_context_windows.extend(windows)
-        
-        print(f"✅ Extracted {len(all_context_windows)} context windows")
-        
-        # Step 3: Build networks
-        print("\n3. Building passing networks...")
-        network_data = self.network_builder.build_networks_from_windows(all_context_windows)
-        print(f"✅ Built {len(network_data)} networks")
-        
-        # Step 4: Calculate network metrics
-        print("\n4. Calculating network metrics...")
-        results_list = []
-        
-        for window_data in network_data:
-            if window_data['network'] is not None:
-                metrics = self.network_analyzer._calculate_network_metrics(window_data['network'])
+    def run_rq1_analysis(self, 
+                           max_matches: int = 50,
+                           save_results: bool = True, 
+                           create_plots: bool = True, 
+                           filepath: str = "statsbomb_data_interim_100.json") -> Dict:
+            """Run RQ1 analysis using pre-loaded data"""
+            print("RUNNING RQ1: NETWORK ANALYSIS")
+            print("=" * 60)
+            
+            # Load data from JSON if not already loaded
+            if self.data_loader.matches_data.empty:
+                print("Loading data from JSON...")
+                self.data_loader.load_from_json(filepath)
+            
+            # Initialize network analyzer with the loaded data
+            self.network_analyzer = NetworkAnalyzer(self.data_loader)
+            
+            print("Starting RQ1: Contextual Network Analysis")
+            print("=" * 50)
+            
+            print("\n1. Loading data...")
+            print("Loading matches and events for context analysis...")
+            
+            # Step 2: Extract context windows
+            print("\n2. Extracting context windows...")
+            all_context_windows = []
+            
+            # Use the loaded matches data correctly
+            if hasattr(self.data_loader, 'matches') and self.data_loader.matches:
+                matches_to_process = self.data_loader.matches[:max_matches]
+                print(f"Processing {len(matches_to_process)} matches...")
                 
-                result = {
-                    'match_id': window_data['match_id'],
-                    'team': window_data['team'],
-                    'start_minute': window_data['start_minute'],
-                    'end_minute': window_data['end_minute'],
-                    'pass_count': window_data['pass_count'],
-                    'score_context': window_data['score_context'],
-                    'phase_context': window_data['phase_context'],
-                    'intensity_context': window_data['intensity_context'],
-                    **metrics
-                }
-                results_list.append(result)
-        
-        results_df = pd.DataFrame(results_list)
-        print(f"✅ Calculated metrics for {len(results_df)} windows")
-        
-        # Step 5: Statistical analysis
-        print("\n5. Performing statistical analysis...")
-        statistical_results = self.statistical_comparator.compare_contexts(results_df)
-        
-        # Step 6: Generate report
-        print("\n6. Generating report...")
-        report = self.statistical_comparator.generate_comprehensive_report()
-        
-        # Store results
-        self.results = {
-            'context_windows': all_context_windows,
-            'network_metrics': results_df,
-            'statistical_results': statistical_results,
-            'report': report
-        }
-        
-        if create_plots:
-            print("\n7. Creating visualizations...")
-            self.create_visualizations()
+                for match in matches_to_process:
+                    match_id = str(match['match_id'])  # Ensure string format
+                    if match_id in self.data_loader.events:
+                        print(f"Processing match {match_id}...")
+                        windows = self.context_analyzer.extract_context_windows(
+                            self.data_loader.events[match_id], match_id
+                        )
+                        all_context_windows.extend(windows)
+                    else:
+                        print(f"⚠️  No events found for match {match_id}")
+            else:
+                print("❌ No matches data available")
+                # Try using matches_data DataFrame instead
+                if not self.data_loader.matches_data.empty:
+                    print("Using matches_data DataFrame...")
+                    matches_df = self.data_loader.matches_data.head(max_matches)
+                    
+                    for _, match_row in matches_df.iterrows():
+                        match_id = str(match_row['match_id'])
+                        if match_id in self.data_loader.events:
+                            print(f"Processing match {match_id}...")
+                            windows = self.context_analyzer.extract_context_windows(
+                                self.data_loader.events[match_id], match_id
+                            )
+                            all_context_windows.extend(windows)
+            
+            print(f"✅ Extracted {len(all_context_windows)} context windows")
+            
+            # Rest of the method remains the same...
+            # Step 3: Build networks
+            print("\n3. Building passing networks...")
+            network_data = self.network_builder.build_networks_from_windows(all_context_windows)
+            print(f"✅ Built {len(network_data)} networks")
+            
+            # Step 4: Calculate network metrics
+            print("\n4. Calculating network metrics...")
+            results_list = []
+            
+            for window_data in network_data:
+                if window_data['network'] is not None:
+                    metrics = self.network_analyzer._calculate_network_metrics(window_data['network'])
+                    
+                    result = {
+                        'match_id': window_data['match_id'],
+                        'team': window_data['team'],
+                        'start_minute': window_data['start_minute'],
+                        'end_minute': window_data['end_minute'],
+                        'pass_count': window_data['pass_count'],
+                        'score_context': window_data['score_context'],
+                        'phase_context': window_data['phase_context'],
+                        'intensity_context': window_data['intensity_context'],
+                        **metrics
+                    }
+                    results_list.append(result)
+            
+            results_df = pd.DataFrame(results_list)
+            print(f"✅ Calculated metrics for {len(results_df)} windows")
+            
+            # Step 5: Statistical analysis
+            print("\n5. Performing statistical analysis...")
+            statistical_results = self.statistical_comparator.compare_contexts(results_df)
+            
+            # Step 6: Generate report
+            print("\n6. Generating report...")
+            report = self.statistical_comparator.generate_comprehensive_report()
+            
+            # Store results
+            self.results = {
+                'context_windows': all_context_windows,
+                'network_metrics': results_df,
+                'statistical_results': statistical_results,
+                'report': report
+            }
+            
+            if create_plots:
+                print("\n7. Creating visualizations...")
+                self.create_visualizations()
 
-        # Save results
-        if save_results:
-            self._save_results()
-        
-        print("\n✅ Analysis complete!")
-        print(f"Total context windows analyzed: {len(all_context_windows)}")
-        print(f"Total networks built: {len(network_data)}")
-        print(f"Final dataset size: {len(results_df)} observations")
-        
-        # Print summary
-        self.print_summary()
-        
-        return self.results
-    
+            # Save results
+            if save_results:
+                self._save_results()
+            
+            print("\n✅ Analysis complete!")
+            print(f"Total context windows analyzed: {len(all_context_windows)}")
+            print(f"Total networks built: {len(network_data)}")
+            print(f"Final dataset size: {len(results_df)} observations")
+            
+            # Print summary only if we have data
+            if len(results_df) > 0:
+                self.print_summary()
+            else:
+                print("⚠️  No data to summarize - check data loading and context extraction")
+            
+            return self.results
+
     def _save_results(self):
         """Save analysis results"""
         # use the centralized results_dir
@@ -259,24 +272,19 @@ class MainAnalysis:
         recommender = TacticalRecommender(self.results)
         recommender.initialize_system(self.results['network_metrics'])
 
-        # Generate sample recommendations first
-        print("\n1. Testing recommendation system...")
-        sample_recommendations = self._generate_sample_recommendations(recommender)
-
         # Analyze recommendations for all matches
-        print("\n2. Generating match-level recommendations...")
+        print("\nGenerating match-level recommendations...")
         match_recommendations = self._generate_match_recommendations(recommender)
 
         # Create recommendation report
-        print("\n3. Creating recommendation report...")
+        print("\nCreating recommendation report...")
         recommendation_report = self._create_recommendation_report(
-            recommender, sample_recommendations, match_recommendations
+            recommender, match_recommendations
         )
 
         # Store RQ2 results
         rq2_results = {
             'recommender': recommender,
-            'sample_recommendations': sample_recommendations,
             'match_recommendations': match_recommendations,
             'recommendation_report': recommendation_report,
             'system_summary': recommender.get_system_summary()
@@ -293,11 +301,6 @@ class MainAnalysis:
         print(f"📊 Generated recommendations for {len(match_recommendations)} match scenarios")
 
         return rq2_results
-
-    def _generate_sample_recommendations(self, recommender) -> list:
-        """Generate sample recommendations for testing"""
-        # This method needs to be implemented
-        return []
 
     def _generate_match_recommendations(self, recommender) -> list[dict]:
         """Generate recommendations for sample matches"""
@@ -325,7 +328,7 @@ class MainAnalysis:
         
         return []
 
-    def _create_recommendation_report(self, recommender, sample_recs, match_recs) -> str:
+    def _create_recommendation_report(self, recommender, match_recs) -> str:
         """Create comprehensive recommendation report"""
         
         report_lines = [
@@ -335,32 +338,13 @@ class MainAnalysis:
             "SYSTEM OVERVIEW:",
             f"- Total Rules: {len(recommender.rule_engine.rules)}",
             f"- Threshold Metrics: {len(recommender.threshold_analyzer.thresholds)}",
-            f"- Test Scenarios: {len(sample_recs)}",
             f"- Match Analyses: {len(match_recs)}",
             "",
             "KEY FINDINGS FROM RQ1 INTEGRATION:",
             "- Match intensity is the strongest predictor of network structure",
             "- High intensity increases network density by 117%",
-            "- Rules leverage this relationship for tactical recommendations",
-            "",
-            "SAMPLE RECOMMENDATION SCENARIOS:",
+            "- Rules leverage this relationship for tactical recommendations"
         ]
-        
-        # Add sample scenarios
-        for i, test in enumerate(sample_recs, 1):
-            scenario = test['scenario']
-            recs = test['recommendations']
-            
-            report_lines.extend([
-                f"\n{i}. {scenario['name']}:",
-                f"   Context: {scenario['context']}",
-                f"   Recommendations: {len(recs['recommendations'])}",
-            ])
-            
-            if recs['recommendations']:
-                primary_rec = recs['recommendations'][0]
-                report_lines.append(f"   Primary: {primary_rec['action']}")
-                report_lines.append(f"   Confidence: {primary_rec['confidence']} ({primary_rec['confidence_score']:.2f})")
         
         # Add match analysis summary
         if match_recs:

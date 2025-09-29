@@ -27,12 +27,12 @@ def collect_data_batch(batch_size=50, max_matches=None, save_interval=100):
     # Define competitions to collect
     competitions = [
         # La Liga
-        (11, 90),   # La Liga 2020/2021
-        (11, 42),   # La Liga 2019/2020
+        #(11, 90),   # La Liga 2020/2021
+        #(11, 42),   # La Liga 2019/2020
         # Premier League
         (2, 27),    # Premier League 2015/2016
         # Serie A
-        (12, 27),   # Serie A 2015/2016
+        #(12, 27),   # Serie A 2015/2016
     ]
     
     # Load data in batches

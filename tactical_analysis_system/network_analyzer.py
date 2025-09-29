@@ -46,7 +46,9 @@ class NetworkAnalyzer:
                 'avg_betweenness_centrality': 0,
                 'avg_eigenvector_centrality': 0,
                 'avg_path_length': 0,
-                'centralization': 0
+                'centralization': 0,
+                'normalized_path_length': 0,
+                'normalized_centralization': 0
             }
         
         # Basic metrics
@@ -79,12 +81,10 @@ class NetworkAnalyzer:
         except:
             avg_path_length = 0
         
-        # Network centralization (based on degree centrality)
-        degree_centrality = nx.degree_centrality(G)
-        max_centrality = max(degree_centrality.values()) if degree_centrality else 0
-        centralization = max_centrality - np.mean(list(degree_centrality.values())) if degree_centrality else 0
+        # Network centralization (Freeman's centralization index)
+        centralization = self._freeman_centralization(G)
         
-        return {
+        metrics = {
             'density': density,
             'clustering_coefficient': clustering,
             'avg_betweenness_centrality': avg_betweenness,
@@ -92,6 +92,45 @@ class NetworkAnalyzer:
             'avg_path_length': avg_path_length,
             'centralization': centralization
         }
+        
+        # Normalize metrics before returning
+        metrics = self._normalize_metrics(metrics, G)
+        
+        return metrics
+    
+    def _freeman_centralization(self, G):
+        """Calculate Freeman's centralization index"""
+        degree_centrality = nx.degree_centrality(G)
+        if not degree_centrality:
+            return 0
+        
+        max_centrality = max(degree_centrality.values())
+        sum_differences = sum(max_centrality - c for c in degree_centrality.values())
+        n = len(degree_centrality)
+        max_possible_sum = (n - 1) * (n - 2) / (n - 1) if n > 2 else 0
+        
+        return sum_differences / max_possible_sum if max_possible_sum > 0 else 0
+    
+    def _normalize_metrics(self, metrics, G):
+        """Normalize metrics for comparison"""
+        n_nodes = G.number_of_nodes()
+        n_edges = G.number_of_edges()
+        
+        # Normalize path length by theoretical minimum
+        if metrics['avg_path_length'] > 0:
+            metrics['normalized_path_length'] = 1 / metrics['avg_path_length']
+        else:
+            metrics['normalized_path_length'] = 0
+        
+        # Normalize centralization properly (Freeman's formula)
+        degree_centrality = nx.degree_centrality(G)
+        if degree_centrality and n_nodes > 2:
+            max_possible_centralization = (n_nodes - 1) / (n_nodes - 2)
+            metrics['normalized_centralization'] = metrics['centralization'] / max_possible_centralization if max_possible_centralization > 0 else 0
+        else:
+            metrics['normalized_centralization'] = 0
+        
+        return metrics
     
     def get_aggregated_results(self) -> pd.DataFrame:
         """Combine results from all matches"""

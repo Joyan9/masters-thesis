@@ -1,0 +1,54 @@
+{
+  "density": {
+    "critical": {
+      "threshold": 0.2,
+      "rule": "EMERGENCY: All players forward, maximum attacking commitment",
+      "recommendation_type": "attacking"
+    },
+    "low": {
+      "threshold": 0.35,
+      "rule": "Increase wing play and stretch opposition lines",
+      "recommendation_type": "spatial"
+    }
+  },
+  "clustering_coefficient": {
+    "critical": {
+      "threshold": 0.15,
+      "rule": "Form passing triangles: Create immediate local connections",
+      "recommendation_type": "connectivity"
+    },
+    "low": {
+      "threshold": 0.25,
+      "rule": "Encourage short combinations in midfield",
+      "recommendation_type": "connectivity"
+    }
+  },
+  "avg_path_length": {
+    "high": {
+      "threshold": 2.5,
+      "rule": "Increase tempo: Quick passing and higher pressing intensity",
+      "recommendation_type": "tempo"
+    }
+  },
+  "centralization": {
+    "high": {
+      "threshold": 0.6,
+      "rule": "Reduce reliance on central player, involve fullbacks",
+      "recommendation_type": "spatial"
+    }
+  },
+  "avg_betweenness_centrality": {
+    "low": {
+      "threshold": 0.1,
+      "rule": "Encourage more varied build-up routes",
+      "recommendation_type": "connectivity"
+    }
+  },
+  "avg_eigenvector_centrality": {
+    "low": {
+      "threshold": 0.1,
+      "rule": "Empower secondary playmakers to increase influence",
+      "recommendation_type": "attacking"
+    }
+  }
+}
