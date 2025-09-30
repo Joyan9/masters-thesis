@@ -17,7 +17,7 @@ class ContextAnalyzer:
         df = pd.DataFrame(events)
         
         # Filter and prepare data
-        df = df[df['type'].isin(['Pass', 'Goal'])].copy()
+        df = df[df['type'].isin(['Pass', 'Shot'])].copy()
         df['minute'] = pd.to_numeric(df['minute'], errors='coerce').fillna(0)
         
         # Get team names
@@ -30,7 +30,7 @@ class ContextAnalyzer:
         score_progression = self._calculate_score_progression(df, teams)
         
         # Create sliding windows
-        windows = create_sliding_windows(90, self.window_size, self.step_size)
+        windows = create_sliding_windows(95, self.window_size, self.step_size)
         context_windows = []
         
         for start_min, end_min in windows:
@@ -40,30 +40,36 @@ class ContextAnalyzer:
                 )
                 if window_data:
                     context_windows.append(window_data)
-        
+                    
         self.context_windows[match_id] = context_windows
         return context_windows
     
     def _calculate_score_progression(self, df: pd.DataFrame, teams: List[str]) -> Dict:
-        """Calculate score at each minute"""
+        """Calculate score at each minute based on goal events"""
         home_team, away_team = teams[0], teams[1]
-        goals = df[df['type'] == 'Goal'].sort_values('minute')
+
+        # Filter only shot events
+        shots = df[df['type'] == 'Shot'].copy()
+        
+        # With flattened data structure, check the 'shot_outcome' column directly
+        # Filter for goals - handle NaN values safely
+        goals = shots[shots['shot_outcome'] == 'Goal'].sort_values('minute')
         
         score_progression = {}
         home_score, away_score = 0, 0
-        
-        for minute in range(91):  # 0-90 minutes
-            # Add goals that occurred before this minute
-            minute_goals = goals[goals['minute'] < minute]
+
+        for minute in range(91):  # 0-90
+            minute_goals = goals[goals['minute'] <= minute]
+
             home_score = len(minute_goals[minute_goals['team'] == home_team])
             away_score = len(minute_goals[minute_goals['team'] == away_team])
-            
+
             score_progression[minute] = {
                 home_team: home_score,
                 away_team: away_score,
                 'diff': home_score - away_score
             }
-        
+
         return score_progression
     
     def _analyze_window(self, df: pd.DataFrame, team: str, start_min: float, 
@@ -76,7 +82,6 @@ class ContextAnalyzer:
             (df['minute'] >= start_min) & 
             (df['minute'] < end_min)
         ]
-        
         # Check minimum pass threshold
         if len(team_passes) < self.min_passes:
             return None
@@ -84,7 +89,7 @@ class ContextAnalyzer:
         # Get context at window midpoint
         mid_minute = int((start_min + end_min) / 2)
         score_data = score_progression.get(mid_minute, {'diff': 0})
-        
+
         # Determine score context relative to this team
         team_list = list(score_progression[0].keys())
         team_list.remove('diff')
@@ -98,13 +103,16 @@ class ContextAnalyzer:
         
         # Calculate intensity
         pass_rate = len(team_passes) / self.window_size
-        if pass_rate > 15:
+        
+        if pass_rate > 8:
             intensity = 'high'
-        elif pass_rate > 10:
+        elif pass_rate > 5:
             intensity = 'medium'
         else:
             intensity = 'low'
         
+        #print(f"[DEBUG] Window {start_min}-{end_min} {team}: score_diff={score_diff}, pass_rate={pass_rate:.2f}, score_context={contexts['score']}, intensity={intensity}")
+
         return {
             'match_id': match_id,
             'team': team,

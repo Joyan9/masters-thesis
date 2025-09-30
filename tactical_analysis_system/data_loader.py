@@ -16,7 +16,7 @@ class DataLoader:
         self.events_data = pd.DataFrame()
         self.lineups_data = pd.DataFrame()
     
-    def load_data(self, competitions, max_matches=None, batch_size=50, save_interval=None):
+    def load_data(self, competitions, max_matches=None, batch_size=10, save_interval=None):
         """Load matches and events data in batches"""
         
         # Load matches first

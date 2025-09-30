@@ -41,9 +41,9 @@ def get_context_label(minute, score_diff, match_contexts):
     contexts = {}
     
     # Score context
-    if score_diff > 1:
+    if score_diff > 0:
         contexts['score'] = 'leading'
-    elif score_diff < -1:
+    elif score_diff < 0:
         contexts['score'] = 'trailing'
     else:
         contexts['score'] = 'tied'

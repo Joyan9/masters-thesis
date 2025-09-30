@@ -22,7 +22,7 @@ def main():
         return
     
     try:
-        window_sizes = [5, 10, 15]
+        window_sizes = [10] # reduced to just 10 minute windows
         results_by_window = {}
         network_data_by_window = {}
         for w_size in window_sizes:

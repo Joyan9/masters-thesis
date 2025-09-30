@@ -15,7 +15,7 @@ sys.path.insert(0, str(project_root))
 
 from tactical_analysis_system.data_loader import DataLoader
 
-def collect_data_batch(batch_size=50, max_matches=None, save_interval=100):
+def collect_data_batch(batch_size=10, max_matches=50, save_interval=10):
     """Collect and save data in batches"""
     print("COLLECTING STATSBOMB DATA - BATCH MODE")
     print("=" * 50)
@@ -27,10 +27,10 @@ def collect_data_batch(batch_size=50, max_matches=None, save_interval=100):
     # Define competitions to collect
     competitions = [
         # La Liga
-        #(11, 90),   # La Liga 2020/2021
+        (11, 90),   # La Liga 2020/2021
         #(11, 42),   # La Liga 2019/2020
         # Premier League
-        (2, 27),    # Premier League 2015/2016
+        #(2, 27),    # Premier League 2015/2016
         # Serie A
         #(12, 27),   # Serie A 2015/2016
     ]

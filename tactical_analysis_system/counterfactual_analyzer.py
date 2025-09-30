@@ -170,12 +170,21 @@ class CounterfactualAnalyzer:
         train_score = model.score(X_train_scaled, y_train)
         test_score = model.score(X_test_scaled, y_test)
         
+        # Calculate additional metrics
+        y_pred = model.predict(X_test_scaled)
+        r2 = sklearn.metrics.r2_score(y_test, y_pred)
+        mae = sklearn.metrics.mean_absolute_error(y_test, y_pred)
+        rmse = np.sqrt(sklearn.metrics.mean_squared_error(y_test, y_pred))
+        
         return {
             'model': model,
             'scaler': scaler,
             'features': available_features,
             'train_score': train_score,
             'test_score': test_score,
+            'r2': r2,
+            'mae': mae,
+            'rmse': rmse,
             'feature_importance': dict(zip(available_features, model.feature_importances_))
         }
     
@@ -515,11 +524,13 @@ class CounterfactualAnalyzer:
         """Evaluate performance of predictive models"""
         
         model_performance = {}
-        
         for metric, model_info in self.counterfactual_models.items():
             model_performance[metric] = {
                 'train_score': model_info['train_score'],
                 'test_score': model_info['test_score'],
+                'r2': model_info.get('r2'),
+                'mae': model_info.get('mae'),
+                'rmse': model_info.get('rmse'),
                 'feature_count': len(model_info['features']),
                 'top_features': sorted(
                     model_info['feature_importance'].items(),
