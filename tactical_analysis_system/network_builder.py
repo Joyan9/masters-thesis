@@ -62,7 +62,7 @@ class NetworkBuilder:
         return map_coordinates_to_zone(x, y, period)
     
     def _create_network(self, passes: pd.DataFrame) -> nx.Graph:
-        """Create weighted network from passes"""
+        """Create weighted network from passes, with normalized edge weights"""
         G = nx.Graph()
         
         # Add all possible zones as nodes (0-48 for 7x7 grid)
@@ -70,6 +70,7 @@ class NetworkBuilder:
         
         # Count passes between zones
         edge_weights = {}
+        total_passes = 0
         for _, pass_event in passes.iterrows():
             origin = int(pass_event['origin_zone'])
             dest = int(pass_event['dest_zone'])
@@ -77,9 +78,11 @@ class NetworkBuilder:
             if origin != dest:  # Exclude self-passes
                 edge = tuple(sorted([origin, dest]))
                 edge_weights[edge] = edge_weights.get(edge, 0) + 1
-        
-        # Add weighted edges
+                total_passes += 1
+
+        # Normalize edge weights by total number of passes in the window
         for (node1, node2), weight in edge_weights.items():
-            G.add_edge(node1, node2, weight=weight)
+            norm_weight = weight / total_passes if total_passes > 0 else 0
+            G.add_edge(node1, node2, weight=norm_weight, raw_weight=weight)
         
         return G
