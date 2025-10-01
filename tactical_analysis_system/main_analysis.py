@@ -566,7 +566,19 @@ class MainAnalysis:
                 report_lines.append("   ✅ Moderate-quality predictive models")
             else:
                 report_lines.append("   ⚠️  Low-quality predictive models")
-        
+
+            # Add per-metric RMSE, MAE, R²
+            if 'individual_models' in model_perf:
+                report_lines.append("")
+                report_lines.append("   Model Metrics (per network metric):")
+                report_lines.append("   Metric                |   R²    |   MAE   |  RMSE")
+                report_lines.append("   ---------------------|---------|---------|---------")
+                for metric, perf in model_perf['individual_models'].items():
+                    r2 = perf.get('r2', float('nan'))
+                    mae = perf.get('mae', float('nan'))
+                    rmse = perf.get('rmse', float('nan'))
+                    report_lines.append(f"   {metric:<21} | {r2:7.3f} | {mae:7.3f} | {rmse:7.3f}")
+
         # Add recommendations for improvement
         report_lines.extend([
             "",

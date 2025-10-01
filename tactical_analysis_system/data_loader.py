@@ -88,33 +88,45 @@ class DataLoader:
     def _create_dataframes(self):
         """Create pandas DataFrames from loaded data for analysis compatibility"""
         import pandas as pd
-        
-        # Create matches_data DataFrame
-        if self.matches:
+
+        # Data integrity checks and missing data handling
+        if not self.matches:
+            print("⚠️ No matches loaded.")
+            self.matches_data = pd.DataFrame()
+        else:
             self.matches_data = pd.DataFrame(self.matches)
             if 'match_date' in self.matches_data.columns:
                 self.matches_data['match_date'] = pd.to_datetime(self.matches_data['match_date'])
-        else:
-            self.matches_data = pd.DataFrame()
-        
-        # Create events_data DataFrame by combining all events
-        if self.events:
-            all_events = []
-            for match_id, events_list in self.events.items():
-                for event in events_list:
-                    event['match_id'] = match_id  # Ensure match_id is in each event
-                    all_events.append(event)
-            
+
+        # Combine all events, handle missing or malformed events
+        all_events = []
+        for match_id, events_list in self.events.items():
+            for event in events_list:
+                event['match_id'] = match_id
+                # Handle missing coordinates
+                if 'location' in event and (event['location'] is None or len(event['location']) < 2):
+                    event['location'] = [None, None]
+                if 'pass_end_location' in event and (event['pass_end_location'] is None or len(event['pass_end_location']) < 2):
+                    event['pass_end_location'] = [None, None]
+                all_events.append(event)
+
+        if all_events:
             self.events_data = pd.DataFrame(all_events)
             if 'timestamp' in self.events_data.columns:
                 self.events_data['timestamp'] = pd.to_datetime(self.events_data['timestamp'])
+            # Data integrity check: drop events missing essential fields
+            essential_cols = ['type', 'team', 'minute']
+            missing_essentials = self.events_data[self.events_data[essential_cols].isnull().any(axis=1)]
+            if not missing_essentials.empty:
+                print(f"⚠️ Dropping {len(missing_essentials)} events missing essential fields: {essential_cols}")
+                self.events_data = self.events_data.drop(missing_essentials.index)
         else:
             self.events_data = pd.DataFrame()
-        
+
         # Create empty lineups_data for compatibility (if you need lineups later)
         if not hasattr(self, 'lineups_data'):
             self.lineups_data = pd.DataFrame()
-        
+
         print(f"   - DataFrames created: {len(self.matches_data)} matches, {len(self.events_data)} events")
     
     def _save_interim_data(self, filename):

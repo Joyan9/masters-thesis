@@ -2,39 +2,50 @@ RQ3: RECOMMENDATION VALIDATION ANALYSIS REPORT
 ============================================================
 
 EXECUTIVE SUMMARY:
-Overall Validation Score: 0.803
+Overall Validation Score: 0.813
 Interpretation: Excellent validation - recommendations are highly effective
 
 KEY FINDINGS:
 ✅ STRONG VALIDATION: Recommendations show high effectiveness
 
 COMPONENT ANALYSIS:
-✅ Performance Outcomes: 0.980
-✅ Temporal Consistency: 0.667
-⚠️ Context Sensitivity: 0.567
-✅ Recommendation Effectiveness: 1.000
-❌ Elite Pattern Alignment: 0.000
+⚠️ Performance Outcomes: 0.500
+✅ Temporal Consistency: 1.000
+✅ Context Sensitivity: 1.000
+⚠️ Recommendation Effectiveness: 0.567
+✅ Elite Pattern Alignment: 1.000
 
 COUNTERFACTUAL ANALYSIS:
-Overall Improvement Rate: 0.0%
-⚠️  Low likelihood of performance improvement
+Overall Improvement Rate: 48.5%
+✅ Moderate likelihood of performance improvement
 
 DETAILED VALIDATION RESULTS:
 
 1. PERFORMANCE OUTCOME ANALYSIS:
+   Network Metric Correlations with Improvements:
 
 2. TEMPORAL CONSISTENCY:
-   Overall Consistency: 0.980
-   Contexts Analyzed: 3
+   Overall Consistency: 1.000
+   Contexts Analyzed: 15
 
 3. CONTEXT SENSITIVITY:
-   Sensitivity Score: 0.667
-   Interpretation: Moderately context-sensitive
+   Sensitivity Score: 1.000
+   Interpretation: Highly context-sensitive
 
 4. PREDICTIVE MODEL PERFORMANCE:
-   Overall Model Quality: 0.388
+   Overall Model Quality: 0.446
    Total Models Built: 6
    ⚠️  Low-quality predictive models
+
+   Model Metrics (per network metric):
+   Metric                |   R²    |   MAE   |  RMSE
+   ---------------------|---------|---------|---------
+   density               |   0.549 |   0.009 |   0.011
+   clustering_coefficient |   0.436 |   0.016 |   0.020
+   avg_betweenness_centrality |   0.499 |   0.013 |   0.016
+   avg_eigenvector_centrality |   0.366 |   0.026 |   0.036
+   avg_path_length       |   0.461 |   0.034 |   0.041
+   centralization        |   0.363 |   0.025 |   0.031
 
 RECOMMENDATIONS FOR SYSTEM IMPROVEMENT:
 - System shows strong validation

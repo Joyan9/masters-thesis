@@ -4,7 +4,6 @@ TACTICAL RECOMMENDATION SYSTEM REPORT
 SYSTEM OVERVIEW:
 - Total Rules: 5
 - Threshold Metrics: 6
-- Test Scenarios: 3
 - Match Analyses: 5
 
 KEY FINDINGS FROM RQ1 INTEGRATION:
@@ -12,24 +11,8 @@ KEY FINDINGS FROM RQ1 INTEGRATION:
 - High intensity increases network density by 117%
 - Rules leverage this relationship for tactical recommendations
 
-SAMPLE RECOMMENDATION SCENARIOS:
-
-1. Low Density Crisis:
-   Context: {'score_context': 'trailing', 'phase_context': 'late', 'intensity_context': 'low'}
-   Recommendations: 2
-   Primary: EMERGENCY: All players forward, maximum attacking commitment
-   Confidence: very_high (0.98)
-
-2. High Performance:
-   Context: {'score_context': 'leading', 'phase_context': 'middle', 'intensity_context': 'high'}
-   Recommendations: 0
-
-3. Average Performance:
-   Context: {'score_context': 'tied', 'phase_context': 'early', 'intensity_context': 'medium'}
-   Recommendations: 0
-
 MATCH ANALYSIS SUMMARY:
-- Total critical periods identified: 167
+- Total critical periods identified: 175
 - Most common recommendation types:
-  * tempo: 163 instances
-  * none: 4 instances
+  * none: 161 instances
+  * attacking: 14 instances
