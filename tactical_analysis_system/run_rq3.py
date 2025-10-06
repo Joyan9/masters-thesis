@@ -11,6 +11,8 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 from tactical_analysis_system.main_analysis import MainAnalysis
 from tactical_analysis_system.data_loader import DataLoader
+from tactical_analysis_system.visualizer import RQ1Visualizer
+import pandas as pd
 
 def main():
     # Check if data file exists
@@ -25,33 +27,64 @@ def main():
         # Use a single window size for analysis
         window_size = 10
         print(f"\n=== Running analysis for window size: {window_size} minutes ===")
-        analysis = MainAnalysis(use_saved_data=True, data_file=data_file, window_size=window_size, step_size=window_size//2 or 1)
-        print(f"📊 Data summary (window {window_size}):")
-        print(f"   - Matches: {len(analysis.data_loader.matches_data)}")
-        print(f"   - Events: {len(analysis.data_loader.events_data)}")
-        rq1_results = analysis.run_rq1_analysis(max_matches=100, save_results=False, filepath=data_file)
-        # Print summary stats for this window size
-        if 'results_df' in rq1_results:
-            df = rq1_results['results_df']
-            print(f"   - Windows: {len(df)}")
-            print(f"   - Mean pass count: {df['pass_count'].mean():.2f}")
-            print(f"   - Mean density: {df['density'].mean():.4f}")
-        else:
-            print("   - No results_df found in RQ1 results.")
-
-        # Side-by-side visualization for winning vs. losing contexts
-        if 'network_data' in rq1_results:
-            from tactical_analysis_system.visualizer import RQ1Visualizer
-            network_data = rq1_results['network_data']
-            print(f"\nGenerating side-by-side passing network visualization for window size {window_size}...")
-            visualizer = RQ1Visualizer()
-            visualizer.plot_winning_vs_losing_networks(network_data, save_plot=True, output_filename=f'winning_vs_losing_networks_{window_size}min.png')
+        analysis = MainAnalysis(use_saved_data=True, data_file=data_file, 
+                              window_size=window_size, step_size=window_size//2 or 1)
         
-        # Run RQ2 and RQ3 analyses and save reports
+        # Initialize visualizer
+        visualizer = RQ1Visualizer()
+        
+        # Run analyses and create visualizations for each RQ
+        print("\n1. Running RQ1 Analysis...")
+        rq1_results = analysis.run_rq1_analysis(max_matches=100, save_results=True, filepath=data_file)
+        
+        # Check if required data is available for RQ1 visualization
+        if rq1_results and isinstance(rq1_results, dict):
+            if 'network_analysis' in rq1_results:
+                results_df = pd.DataFrame(rq1_results['network_analysis'])
+                statistical_results = rq1_results.get('statistical_results', {})
+                
+                visualizer.create_context_network_analysis_plots(
+                    results_df=results_df,
+                    statistical_results=statistical_results,
+                    save_plots=True
+                )
+            else:
+                print("⚠️  Warning: RQ1 results missing network analysis data")
+        
+        print("\n2. Running RQ2 Analysis...")
         rq2_results = analysis.run_rq2_analysis(save_results=True)
+        
+        # Check if required data is available for RQ2 visualization
+        if rq2_results and isinstance(rq2_results, dict):
+            recommendations = rq2_results.get('recommendations', [])
+            if recommendations:
+                visualizer.create_tactical_recommendation_plots(
+                    recommendations_data=recommendations,
+                    save_plots=True
+                )
+            else:
+                print("⚠️  Warning: RQ2 results missing recommendations data")
+        
+        print("\n3. Running RQ3 Analysis...")
         rq3_results = analysis.run_rq3_analysis(save_results=True)
-
-        print("\n=== RQ3 analysis complete ===")
+        
+        # Check if required data is available for RQ3 visualization
+        if rq3_results and isinstance(rq3_results, dict):
+            counterfactual_results = rq3_results.get('counterfactual_results', {})
+            if counterfactual_results:
+                visualizer.create_validation_analysis_plots(
+                    counterfactual_results=counterfactual_results,
+                    save_plots=True
+                )
+            else:
+                print("⚠️  Warning: RQ3 results missing counterfactual analysis data")
+        
+        print("\n=== Analysis complete ===")
+        print("📊 Plots saved in results/plots/")
+        print("   - RQ1: Context network analysis")
+        print("   - RQ2: Tactical recommendations")
+        print("   - RQ3: Validation analysis")
+        
     except Exception as e:
         print(f"❌ Error during analysis: {e}")
         print(f"Error type: {type(e).__name__}")

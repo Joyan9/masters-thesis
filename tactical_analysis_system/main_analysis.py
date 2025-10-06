@@ -219,17 +219,17 @@ class MainAnalysis:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         # Save main results
-        self.results['network_metrics'].to_csv(output_dir / "network_metrics.csv", index=False)
+        self.results['network_metrics'].to_csv(output_dir / "rq1_network_metrics.csv", index=False)
 
         # Save statistical results
-        with open(output_dir / "statistical_results.json", 'w') as f:
+        with open(output_dir / "rq1_statistical_results.json", 'w') as f:
             json.dump(self.results['statistical_results'], f, indent=2, default=str)
 
         # Save report
-        with open(output_dir / "analysis_report.txt", 'w') as f:
+        with open(output_dir / "rq1_analysis_report.txt", 'w') as f:
             f.write(self.results['report'])
 
-        print(f"✅ Results saved to {output_dir}/")
+        print(f"Results saved to {output_dir}/")
 
     def print_summary(self):
         """Print analysis summary"""
@@ -627,6 +627,14 @@ class MainAnalysis:
         
         print(f"📁 RQ3 results saved to {self.results_dir}")
 
-
 if __name__ == "__main__":
-    pass
+    window_size = 10
+    data_file = "statsbomb_data_interim_100.json"
+    analysis = MainAnalysis(use_saved_data=True, data_file=data_file, 
+                            window_size=window_size)
+        
+    # Run analyses and create visualizations for each RQ
+    print("Running RQ1 Analysis...")
+    rq1_results = analysis.run_rq1_analysis(max_matches=10, save_results=True, filepath=data_file)
+    print("rq1_results.keys():", rq1_results.keys())
+    #print(rq1_results)

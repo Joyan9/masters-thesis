@@ -87,9 +87,11 @@ class RQ1Visualizer:
         plt.rcParams['axes.titlesize'] = 14
         plt.rcParams['axes.labelsize'] = 12
         
+        # Create subdirectories for each RQ
         self.output_dir = Path("results/plots")
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-        
+        for rq in ['rq1', 'rq2', 'rq3']:
+            (self.output_dir / rq).mkdir(parents=True, exist_ok=True)
+
         # Define available metrics (check what actually exists in data)
         self.base_metrics = [
             'density', 'clustering_coefficient', 'avg_betweenness_centrality',
@@ -662,3 +664,230 @@ class RQ1Visualizer:
             plots.append(fname)
 
         return plots
+    
+    def create_context_network_analysis_plots(self, results_df, statistical_results, save_plots=True):
+        """Create plots specifically focused on RQ1's network characteristics across contexts"""
+        plots = []
+        
+        # 1. Context-Specific Network Metrics
+        fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+        
+        # Top left: Score Context (Winning vs Losing vs Tied)
+        self._plot_metric_by_context(
+            df=results_df,
+            metric='density',
+            context='score_context',
+            ax=axes[0,0],
+            title='Network Density by Match State'
+        )
+        
+        # Top right: Temporal Evolution
+        self._plot_temporal_metrics(
+            df=results_df,
+            metrics=['density', 'clustering_coefficient'],
+            ax=axes[0,1],
+            title='Network Evolution Over Time'
+        )
+        
+        # Bottom left: Structure Comparison
+        self._plot_network_structure_comparison(
+            df=results_df,
+            contexts=['winning', 'losing'],
+            ax=axes[1,0],
+            title='Network Structure: Winning vs Losing States'
+        )
+        
+        # Bottom right: Statistical Summary
+        self._plot_statistical_significance(
+            results=statistical_results,
+            ax=axes[1,1],
+            title='Effect Sizes of Context on Network Metrics'
+        )
+        
+        if save_plots:
+            plt.savefig(self.output_dir / 'rq1' / 'context_network_analysis.png', 
+                       dpi=300, bbox_inches='tight')
+            plots.append('context_network_analysis.png')
+        
+        return plots
+
+    def create_tactical_recommendation_plots(self, recommendations_data, save_plots=True):
+        """Create plots specifically focused on RQ2's tactical recommendations"""
+        plots = []
+        
+        # 1. Rule Activation Patterns
+        fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+        
+        # Top left: Rule Activation Frequency
+        self._plot_rule_activation_frequency(
+            data=recommendations_data,
+            ax=axes[0,0],
+            title='Most Frequently Triggered Rules'
+        )
+        
+        # Top right: Context-Rule Matrix
+        self._plot_context_rule_matrix(
+            data=recommendations_data,
+            ax=axes[0,1],
+            title='Rule Activation by Context'
+        )
+        
+        # Bottom left: Metric Thresholds
+        self._plot_metric_thresholds(
+            data=recommendations_data,
+            ax=axes[1,0],
+            title='Network Metric Thresholds for Rules'
+        )
+        
+        # Bottom right: Recommendation Types
+        self._plot_recommendation_types(
+            data=recommendations_data,
+            ax=axes[1,1],
+            title='Distribution of Recommendation Types'
+        )
+        
+        if save_plots:
+            plt.savefig(self.output_dir / 'rq2' / 'tactical_recommendations.png',
+                       dpi=300, bbox_inches='tight')
+            plots.append('tactical_recommendations.png')
+        
+        return plots
+
+    def create_validation_analysis_plots(self, counterfactual_results, save_plots=True):
+        """Create plots specifically focused on RQ3's recommendation validation"""
+        plots = []
+        
+        # 1. Counterfactual Analysis Results
+        fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+        
+        # Top left: Prediction Accuracy
+        self._plot_prediction_accuracy(
+            results=counterfactual_results,
+            ax=axes[0,0],
+            title='Model Prediction Accuracy'
+        )
+        
+        # Top right: Effect Sizes
+        self._plot_recommendation_effects(
+            results=counterfactual_results,
+            ax=axes[0,1],
+            title='Recommendation Effect Sizes'
+        )
+        
+        # Bottom left: Temporal Validation
+        self._plot_temporal_validation(
+            results=counterfactual_results,
+            ax=axes[1,0],
+            title='Temporal Validation Results'
+        )
+        
+        # Bottom right: Overall Effectiveness
+        self._plot_effectiveness_summary(
+            results=counterfactual_results,
+            ax=axes[1,1],
+            title='Overall Recommendation Effectiveness'
+        )
+        
+        if save_plots:
+            plt.savefig(self.output_dir / 'rq3' / 'validation_analysis.png',
+                       dpi=300, bbox_inches='tight')
+            plots.append('validation_analysis.png')
+        
+        return plots
+
+    def _plot_prediction_accuracy(self, results, ax, title):
+        """Plot prediction accuracy metrics for each network metric"""
+        if 'model_performance' not in results:
+            return
+        
+        model_perf = results['model_performance'].get('individual_models', {})
+        metrics = []
+        r2_scores = []
+        mae_scores = []
+        rmse_scores = []
+        
+        for metric, perf in model_perf.items():
+            metrics.append(metric.replace('_', ' ').title())
+            r2_scores.append(perf.get('r2', 0))
+            mae_scores.append(perf.get('mae', 0))
+            rmse_scores.append(perf.get('rmse', 0))
+        
+        x = np.arange(len(metrics))
+        width = 0.25
+        
+        ax.bar(x - width, r2_scores, width, label='R²', color='skyblue')
+        ax.bar(x, mae_scores, width, label='MAE', color='lightgreen')
+        ax.bar(x + width, rmse_scores, width, label='RMSE', color='salmon')
+        
+        ax.set_ylabel('Score')
+        ax.set_title(title)
+        ax.set_xticks(x)
+        ax.set_xticklabels(metrics, rotation=45, ha='right')
+        ax.legend()
+        ax.grid(True, alpha=0.3)
+
+    def _plot_recommendation_effects(self, results, ax, title):
+        """Plot effect sizes of different recommendation types"""
+        if 'recommendation_effects' not in results:
+            return
+        
+        effects = results['recommendation_effects']
+        rec_types = list(effects.keys())
+        metrics = ['density', 'clustering', 'centralization', 'path_length']
+        
+        data = []
+        for rec_type in rec_types:
+            for metric in metrics:
+                data.append({
+                    'Recommendation': rec_type.title(),
+                    'Metric': metric.replace('_', ' ').title(),
+                    'Effect': effects[rec_type].get(metric, 0)
+                })
+        
+        df = pd.DataFrame(data)
+        sns.heatmap(
+            df.pivot(index='Recommendation', columns='Metric', values='Effect'),
+            annot=True, fmt='.3f', cmap='RdYlBu', center=0, ax=ax
+        )
+        ax.set_title(title)
+
+    def _plot_temporal_validation(self, results, ax, title):
+        """Plot temporal validation results"""
+        if 'temporal_validation' not in results:
+            return
+        
+        temporal = results['temporal_validation']
+        windows = list(range(1, len(temporal['prediction_accuracy']) + 1))
+        accuracy = temporal['prediction_accuracy']
+        
+        ax.plot(windows, accuracy, marker='o', linestyle='-', linewidth=2)
+        ax.set_xlabel('Prediction Window')
+        ax.set_ylabel('Accuracy')
+        ax.set_title(title)
+        ax.grid(True, alpha=0.3)
+        
+        # Add mean line
+        mean_acc = np.mean(accuracy)
+        ax.axhline(y=mean_acc, color='r', linestyle='--', 
+                  label=f'Mean Accuracy: {mean_acc:.3f}')
+        ax.legend()
+
+    def _plot_effectiveness_summary(self, results, ax, title):
+        """Plot overall effectiveness measures"""
+        if 'effectiveness_summary' not in results:
+            return
+        
+        summary = results['effectiveness_summary']
+        measures = list(summary.keys())
+        scores = list(summary.values())
+        
+        y_pos = np.arange(len(measures))
+        ax.barh(y_pos, scores, color='lightblue')
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels([m.replace('_', ' ').title() for m in measures])
+        ax.set_xlabel('Score')
+        ax.set_title(title)
+        
+        # Add value labels
+        for i, v in enumerate(scores):
+            ax.text(v, i, f' {v:.3f}', va='center')
