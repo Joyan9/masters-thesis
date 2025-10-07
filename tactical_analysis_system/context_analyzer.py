@@ -6,7 +6,7 @@ from .utils import create_sliding_windows, get_context_label
 class ContextAnalyzer:
     """Analyzes match contexts using sliding windows"""
     
-    def __init__(self, window_size=10, step_size=5, min_passes=20):
+    def __init__(self, window_size=10, step_size=5, min_passes=10):
         self.window_size = window_size
         self.step_size = step_size
         self.min_passes = min_passes

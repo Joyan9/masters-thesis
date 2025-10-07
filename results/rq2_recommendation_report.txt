@@ -12,7 +12,7 @@ KEY FINDINGS FROM RQ1 INTEGRATION:
 - Rules leverage this relationship for tactical recommendations
 
 MATCH ANALYSIS SUMMARY:
-- Total critical periods identified: 175
+- Total critical periods identified: 180
 - Most common recommendation types:
-  * none: 161 instances
+  * none: 166 instances
   * attacking: 14 instances

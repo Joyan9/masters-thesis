@@ -7,80 +7,82 @@ CONTEXT TYPE: SCORE CONTEXT
 DESCRIPTIVE STATISTICS:
 
 Density:
-  leading: M=0.032, SD=0.011, n=880
-  tied: M=0.033, SD=0.011, n=1729
-  trailing: M=0.034, SD=0.011, n=895
+  leading: M=0.032, SD=0.012, n=913
+  tied: M=0.033, SD=0.011, n=1773
+  trailing: M=0.033, SD=0.011, n=912
 
 Clustering Coefficient:
-  leading: M=0.025, SD=0.019, n=880
-  tied: M=0.024, SD=0.018, n=1729
-  trailing: M=0.026, SD=0.020, n=895
+  leading: M=0.024, SD=0.020, n=913
+  tied: M=0.023, SD=0.018, n=1773
+  trailing: M=0.026, SD=0.020, n=912
 
 Avg Betweenness Centrality:
-  leading: M=0.028, SD=0.015, n=880
-  tied: M=0.031, SD=0.015, n=1729
-  trailing: M=0.031, SD=0.014, n=895
+  leading: M=0.027, SD=0.016, n=913
+  tied: M=0.030, SD=0.016, n=1773
+  trailing: M=0.030, SD=0.014, n=912
 
 Avg Eigenvector Centrality:
-  leading: M=0.099, SD=0.033, n=880
-  tied: M=0.101, SD=0.031, n=1729
-  trailing: M=0.103, SD=0.030, n=895
+  leading: M=0.100, SD=0.034, n=913
+  tied: M=0.101, SD=0.031, n=1773
+  trailing: M=0.103, SD=0.030, n=912
 
 Avg Path Length:
-  leading: M=0.104, SD=0.040, n=880
-  tied: M=0.102, SD=0.038, n=1729
-  trailing: M=0.100, SD=0.036, n=895
+  leading: M=0.107, SD=0.043, n=913
+  tied: M=0.104, SD=0.040, n=1773
+  trailing: M=0.101, SD=0.037, n=912
 
 Centralization:
-  leading: M=0.095, SD=0.028, n=880
-  tied: M=0.096, SD=0.027, n=1729
-  trailing: M=0.098, SD=0.027, n=895
+  leading: M=0.093, SD=0.029, n=913
+  tied: M=0.095, SD=0.027, n=1773
+  trailing: M=0.098, SD=0.027, n=912
 
 STATISTICAL TESTS:
 
 Density:
-  Kruskal-Wallis: χ²/F = 12.459, p = 0.002 ***
-  Effect size: η² = 0.002 (negligible)
+  Kruskal-Wallis: χ²/F = 16.221, p = 0.000 ***
+  Effect size: η² = 0.003 (negligible)
 
 Clustering Coefficient:
-  Kruskal-Wallis: χ²/F = 6.350, p = 0.042 ***
+  Kruskal-Wallis: χ²/F = 7.676, p = 0.022 ***
   Effect size: η² = 0.002 (negligible)
 
 Avg Betweenness Centrality:
-  Kruskal-Wallis: χ²/F = 22.469, p = 0.000 ***
-  Effect size: η² = 0.007 (negligible)
+  Kruskal-Wallis: χ²/F = 26.324, p = 0.000 ***
+  Effect size: η² = 0.008 (negligible)
 
 Avg Eigenvector Centrality:
-  Kruskal-Wallis: χ²/F = 4.585, p = 0.101  (ns)
+  Kruskal-Wallis: χ²/F = 3.041, p = 0.219  (ns)
   Effect size: η² = 0.001 (negligible)
 
 Avg Path Length:
-  Kruskal-Wallis: χ²/F = 3.414, p = 0.181  (ns)
-  Effect size: η² = 0.001 (negligible)
+  Kruskal-Wallis: χ²/F = 5.541, p = 0.063  (ns)
+  Effect size: η² = 0.002 (negligible)
 
 Centralization:
-  Kruskal-Wallis: χ²/F = 9.971, p = 0.007 ***
-  Effect size: η² = 0.002 (negligible)
+  Kruskal-Wallis: χ²/F = 14.292, p = 0.001 ***
+  Effect size: η² = 0.003 (negligible)
 
 SIGNIFICANT PAIRWISE COMPARISONS:
 
   Density:
-    tied_vs_leading: p=0.003, d=0.097, Δ=0.001
-    leading_vs_trailing: p=0.001, d=-0.128, Δ=-0.001
+    tied_vs_leading: p=0.001, d=0.111, Δ=0.001
+    leading_vs_trailing: p=0.000, d=-0.153, Δ=-0.002
 
   Clustering Coefficient:
-    tied_vs_trailing: p=0.012, d=-0.117, Δ=-0.002
+    tied_vs_trailing: p=0.007, d=-0.123, Δ=-0.002
+    leading_vs_trailing: p=0.042, d=-0.083, Δ=-0.002
 
   Avg Betweenness Centrality:
-    tied_vs_leading: p=0.000, d=0.184, Δ=0.003
-    leading_vs_trailing: p=0.000, d=-0.192, Δ=-0.003
+    tied_vs_leading: p=0.000, d=0.192, Δ=0.003
+    leading_vs_trailing: p=0.000, d=-0.212, Δ=-0.003
 
-  Avg Eigenvector Centrality:
-    tied_vs_trailing: p=0.042, d=-0.067, Δ=-0.002
+  Avg Path Length:
+    leading_vs_trailing: p=0.017, d=0.135, Δ=0.005
 
   Centralization:
-    tied_vs_trailing: p=0.048, d=-0.082, Δ=-0.002
-    leading_vs_trailing: p=0.002, d=-0.136, Δ=-0.004
+    tied_vs_leading: p=0.024, d=0.080, Δ=0.002
+    tied_vs_trailing: p=0.036, d=-0.084, Δ=-0.002
+    leading_vs_trailing: p=0.000, d=-0.161, Δ=-0.005
 
 ============================================================
 
@@ -90,82 +92,82 @@ CONTEXT TYPE: PHASE CONTEXT
 DESCRIPTIVE STATISTICS:
 
 Density:
-  early: M=0.035, SD=0.011, n=1188
-  late: M=0.030, SD=0.010, n=1139
-  middle: M=0.035, SD=0.011, n=1177
+  early: M=0.034, SD=0.011, n=1200
+  late: M=0.029, SD=0.011, n=1198
+  middle: M=0.034, SD=0.011, n=1200
 
 Clustering Coefficient:
-  early: M=0.026, SD=0.018, n=1188
-  late: M=0.021, SD=0.018, n=1139
-  middle: M=0.026, SD=0.020, n=1177
+  early: M=0.026, SD=0.019, n=1200
+  late: M=0.021, SD=0.018, n=1198
+  middle: M=0.026, SD=0.020, n=1200
 
 Avg Betweenness Centrality:
-  early: M=0.032, SD=0.014, n=1188
-  late: M=0.027, SD=0.015, n=1139
-  middle: M=0.032, SD=0.015, n=1177
+  early: M=0.031, SD=0.015, n=1200
+  late: M=0.026, SD=0.016, n=1198
+  middle: M=0.031, SD=0.015, n=1200
 
 Avg Eigenvector Centrality:
-  early: M=0.101, SD=0.031, n=1188
-  late: M=0.102, SD=0.030, n=1139
-  middle: M=0.100, SD=0.032, n=1177
+  early: M=0.101, SD=0.031, n=1200
+  late: M=0.103, SD=0.032, n=1198
+  middle: M=0.100, SD=0.032, n=1200
 
 Avg Path Length:
-  early: M=0.098, SD=0.037, n=1188
-  late: M=0.111, SD=0.039, n=1139
-  middle: M=0.098, SD=0.037, n=1177
+  early: M=0.099, SD=0.038, n=1200
+  late: M=0.114, SD=0.042, n=1198
+  middle: M=0.100, SD=0.038, n=1200
 
 Centralization:
-  early: M=0.099, SD=0.027, n=1188
-  late: M=0.092, SD=0.027, n=1139
-  middle: M=0.098, SD=0.027, n=1177
+  early: M=0.098, SD=0.027, n=1200
+  late: M=0.091, SD=0.028, n=1198
+  middle: M=0.097, SD=0.028, n=1200
 
 STATISTICAL TESTS:
 
 Density:
-  Kruskal-Wallis: χ²/F = 122.654, p = 0.000 ***
-  Effect size: η² = 0.036 (small)
+  Kruskal-Wallis: χ²/F = 151.377, p = 0.000 ***
+  Effect size: η² = 0.044 (small)
 
 Clustering Coefficient:
-  Kruskal-Wallis: χ²/F = 46.721, p = 0.000 ***
-  Effect size: η² = 0.013 (small)
+  Kruskal-Wallis: χ²/F = 63.382, p = 0.000 ***
+  Effect size: η² = 0.017 (small)
 
 Avg Betweenness Centrality:
-  Kruskal-Wallis: χ²/F = 78.207, p = 0.000 ***
-  Effect size: η² = 0.023 (small)
+  Kruskal-Wallis: χ²/F = 102.194, p = 0.000 ***
+  Effect size: η² = 0.029 (small)
 
 Avg Eigenvector Centrality:
-  Kruskal-Wallis: χ²/F = 0.122, p = 0.941  (ns)
-  Effect size: η² = 0.000 (negligible)
+  Kruskal-Wallis: χ²/F = 0.875, p = 0.646  (ns)
+  Effect size: η² = 0.001 (negligible)
 
 Avg Path Length:
-  Kruskal-Wallis: χ²/F = 88.597, p = 0.000 ***
-  Effect size: η² = 0.025 (small)
+  Kruskal-Wallis: χ²/F = 109.776, p = 0.000 ***
+  Effect size: η² = 0.032 (small)
 
 Centralization:
-  Kruskal-Wallis: χ²/F = 37.979, p = 0.000 ***
-  Effect size: η² = 0.010 (small)
+  Kruskal-Wallis: χ²/F = 53.677, p = 0.000 ***
+  Effect size: η² = 0.014 (small)
 
 SIGNIFICANT PAIRWISE COMPARISONS:
 
   Density:
-    early_vs_late: p=0.000, d=0.424, Δ=0.004
-    middle_vs_late: p=0.000, d=0.417, Δ=0.004
+    early_vs_late: p=0.000, d=0.475, Δ=0.005
+    middle_vs_late: p=0.000, d=0.446, Δ=0.005
 
   Clustering Coefficient:
-    early_vs_late: p=0.000, d=0.242, Δ=0.004
-    middle_vs_late: p=0.000, d=0.251, Δ=0.005
+    early_vs_late: p=0.000, d=0.279, Δ=0.005
+    middle_vs_late: p=0.000, d=0.278, Δ=0.005
 
   Avg Betweenness Centrality:
-    early_vs_late: p=0.000, d=0.319, Δ=0.005
-    middle_vs_late: p=0.000, d=0.328, Δ=0.005
+    early_vs_late: p=0.000, d=0.370, Δ=0.006
+    middle_vs_late: p=0.000, d=0.359, Δ=0.006
 
   Avg Path Length:
-    early_vs_late: p=0.000, d=-0.349, Δ=-0.013
-    middle_vs_late: p=0.000, d=-0.331, Δ=-0.013
+    early_vs_late: p=0.000, d=-0.389, Δ=-0.016
+    middle_vs_late: p=0.000, d=-0.364, Δ=-0.014
 
   Centralization:
-    early_vs_late: p=0.000, d=0.229, Δ=0.006
-    middle_vs_late: p=0.000, d=0.202, Δ=0.005
+    early_vs_late: p=0.000, d=0.271, Δ=0.007
+    middle_vs_late: p=0.000, d=0.235, Δ=0.006
 
 ============================================================
 
@@ -176,90 +178,90 @@ DESCRIPTIVE STATISTICS:
 
 Density:
   high: M=0.054, SD=0.006, n=265
-  low: M=0.025, SD=0.005, n=1804
+  low: M=0.024, SD=0.006, n=1898
   medium: M=0.039, SD=0.005, n=1435
 
 Clustering Coefficient:
   high: M=0.042, SD=0.017, n=265
-  low: M=0.017, SD=0.017, n=1804
+  low: M=0.016, SD=0.017, n=1898
   medium: M=0.031, SD=0.017, n=1435
 
 Avg Betweenness Centrality:
   high: M=0.040, SD=0.009, n=265
-  low: M=0.022, SD=0.014, n=1804
+  low: M=0.021, SD=0.014, n=1898
   medium: M=0.038, SD=0.011, n=1435
 
 Avg Eigenvector Centrality:
   high: M=0.099, SD=0.019, n=265
-  low: M=0.102, SD=0.036, n=1804
+  low: M=0.103, SD=0.037, n=1898
   medium: M=0.099, SD=0.026, n=1435
 
 Avg Path Length:
   high: M=0.048, SD=0.010, n=265
-  low: M=0.128, SD=0.031, n=1804
+  low: M=0.131, SD=0.034, n=1898
   medium: M=0.079, SD=0.019, n=1435
 
 Centralization:
   high: M=0.123, SD=0.027, n=265
-  low: M=0.085, SD=0.023, n=1804
+  low: M=0.084, SD=0.024, n=1898
   medium: M=0.105, SD=0.025, n=1435
 
 STATISTICAL TESTS:
 
 Density:
-  Kruskal-Wallis: χ²/F = 2580.097, p = 0.000 ***
-  Effect size: η² = 0.736 (large)
+  Kruskal-Wallis: χ²/F = 2641.787, p = 0.000 ***
+  Effect size: η² = 0.723 (large)
 
 Clustering Coefficient:
-  Kruskal-Wallis: χ²/F = 766.169, p = 0.000 ***
-  Effect size: η² = 0.194 (large)
+  Kruskal-Wallis: χ²/F = 825.449, p = 0.000 ***
+  Effect size: η² = 0.203 (large)
 
 Avg Betweenness Centrality:
-  Kruskal-Wallis: χ²/F = 1066.498, p = 0.000 ***
-  Effect size: η² = 0.296 (large)
+  Kruskal-Wallis: χ²/F = 1154.593, p = 0.000 ***
+  Effect size: η² = 0.313 (large)
 
 Avg Eigenvector Centrality:
-  Kruskal-Wallis: χ²/F = 54.269, p = 0.000 ***
-  Effect size: η² = 0.003 (negligible)
+  Kruskal-Wallis: χ²/F = 70.019, p = 0.000 ***
+  Effect size: η² = 0.005 (negligible)
 
 Avg Path Length:
-  Kruskal-Wallis: χ²/F = 2192.623, p = 0.000 ***
-  Effect size: η² = 0.548 (large)
+  Kruskal-Wallis: χ²/F = 2259.524, p = 0.000 ***
+  Effect size: η² = 0.536 (large)
 
 Centralization:
-  Kruskal-Wallis: χ²/F = 722.961, p = 0.000 ***
-  Effect size: η² = 0.204 (large)
+  Kruskal-Wallis: χ²/F = 786.167, p = 0.000 ***
+  Effect size: η² = 0.216 (large)
 
 SIGNIFICANT PAIRWISE COMPARISONS:
 
   Density:
-    high_vs_low: p=0.000, d=5.348, Δ=0.029
+    high_vs_low: p=0.000, d=4.946, Δ=0.030
     high_vs_medium: p=0.000, d=2.645, Δ=0.015
-    low_vs_medium: p=0.000, d=-2.659, Δ=-0.014
+    low_vs_medium: p=0.000, d=-2.597, Δ=-0.015
 
   Clustering Coefficient:
-    high_vs_low: p=0.000, d=1.488, Δ=0.025
+    high_vs_low: p=0.000, d=1.522, Δ=0.026
     high_vs_medium: p=0.000, d=0.634, Δ=0.011
-    low_vs_medium: p=0.000, d=-0.825, Δ=-0.014
+    low_vs_medium: p=0.000, d=-0.859, Δ=-0.015
 
   Avg Betweenness Centrality:
-    high_vs_low: p=0.000, d=1.341, Δ=0.018
+    high_vs_low: p=0.000, d=1.380, Δ=0.019
     high_vs_medium: p=0.009, d=0.160, Δ=0.002
-    low_vs_medium: p=0.000, d=-1.252, Δ=-0.016
+    low_vs_medium: p=0.000, d=-1.304, Δ=-0.017
 
   Avg Eigenvector Centrality:
-    high_vs_low: p=0.000, d=-0.092, Δ=-0.003
-    low_vs_medium: p=0.000, d=0.100, Δ=0.003
+    high_vs_low: p=0.000, d=-0.122, Δ=-0.004
+    low_vs_medium: p=0.000, d=0.132, Δ=0.004
 
   Avg Path Length:
-    high_vs_low: p=0.000, d=-2.724, Δ=-0.080
+    high_vs_low: p=0.000, d=-2.611, Δ=-0.083
     high_vs_medium: p=0.000, d=-1.768, Δ=-0.031
-    low_vs_medium: p=0.000, d=1.864, Δ=0.049
+    low_vs_medium: p=0.000, d=1.835, Δ=0.052
 
   Centralization:
-    high_vs_low: p=0.000, d=1.601, Δ=0.038
+    high_vs_low: p=0.000, d=1.628, Δ=0.039
     high_vs_medium: p=0.000, d=0.721, Δ=0.018
-    low_vs_medium: p=0.000, d=-0.831, Δ=-0.020
+    low_vs_medium: p=0.000, d=-0.875, Δ=-0.021
 
 ============================================================
 

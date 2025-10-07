@@ -17,7 +17,7 @@ class MainAnalysis:
                         data_file: str = "statsbomb_data_interim_100.json", 
                         window_size: int = 10, 
                         step_size: int = 5, 
-                        min_passes: int = 20):
+                        min_passes: int = 10):
         """Initialize analysis system
         
         Args:
@@ -86,7 +86,7 @@ class MainAnalysis:
         return plots
 
     def run_rq1_analysis(self, 
-                           max_matches: int = 50,
+                           max_matches: int = 100,
                            save_results: bool = True, 
                            create_plots: bool = True, 
                            filepath: str = "statsbomb_data_interim_100.json") -> Dict:
@@ -145,7 +145,6 @@ class MainAnalysis:
             
             print(f"✅ Extracted {len(all_context_windows)} context windows")
             
-            # Rest of the method remains the same...
             # Step 3: Build networks
             print("\n3. Building passing networks...")
             network_data = self.network_builder.build_networks_from_windows(all_context_windows)
@@ -193,7 +192,7 @@ class MainAnalysis:
             
             if create_plots:
                 print("\n7. Creating visualizations...")
-                self.create_visualizations()
+                #self.create_visualizations()
 
             # Save results
             if save_results:
@@ -297,8 +296,8 @@ class MainAnalysis:
         # Add to main results
         self.results['rq2_results'] = rq2_results
 
-        print(f"\n✅ RQ2 Analysis Complete!")
-        print(f"📊 Generated recommendations for {len(match_recommendations)} match scenarios")
+        print(f"\nRQ2 Analysis Complete!")
+        print(f"Generated recommendations for {len(match_recommendations)} match scenarios")
 
         return rq2_results
 
