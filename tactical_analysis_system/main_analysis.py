@@ -301,6 +301,60 @@ class MainAnalysis:
 
         return rq2_results
 
+
+    def run_threshold_optimization(self, 
+                               n_iterations: int = 100,
+                               save_results: bool = True) -> Dict:
+        """Run IMPROVED threshold optimization"""
+        
+        if 'network_metrics' not in self.results:
+            raise ValueError("Run RQ1 first")
+        
+        print("\n" + "="*60)
+        print("RUNNING IMPROVED THRESHOLD OPTIMIZATION")
+        print("="*60)
+        
+        from .threshold_optimizer import ImprovedThresholdOptimizer
+        
+        # Use improved optimizer
+        optimizer = ImprovedThresholdOptimizer(
+            network_data=self.results['network_metrics']
+        )
+
+        # RUN WITH DIAGNOSTICS
+        optimization_results = optimizer.optimize(
+            n_iterations=n_iterations,
+            n_initial_points=min(20, n_iterations // 5),
+            random_state=42,
+            run_diagnostics=True  # ← Enable diagnostics
+        )
+        
+        # Run optimization
+        optimization_results = optimizer.optimize(
+            n_iterations=n_iterations,
+            n_initial_points=min(20, n_iterations // 5),
+            random_state=42
+        )
+        
+        # Check for errors
+        if 'error' in optimization_results:
+            print(f"\n❌ Optimization failed: {optimization_results['error']}")
+            return optimization_results
+        
+        # Save results
+        if save_results:
+            output_dir = self.results_dir / "threshold_optimization"
+            output_dir.mkdir(parents=True, exist_ok=True)
+            optimizer.save_results(optimization_results, output_dir=str(output_dir))
+        
+        self.results['threshold_optimization'] = optimization_results
+        
+        print(f"\n✅ Optimization Complete!")
+        print(f"📊 Best Score: {optimization_results['best_score']:.4f}")
+        print(f"📈 Improvement: {optimization_results['improvement']:+.4f}")
+        
+        return optimization_results
+
     def _generate_match_recommendations(self, recommender) -> list[dict]:
         """Generate recommendations for sample matches"""
         

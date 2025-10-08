@@ -219,6 +219,11 @@ if __name__ == "__main__":
     rq1_results = analysis.run_rq1_analysis(max_matches=100, save_results=True, filepath=data_file)
     print("RQ1 Done")
 
+    # Run threshold optimization
+    optimization_results = analysis.run_threshold_optimization(
+        n_iterations=100
+    )
+
     print("\n2. Running RQ2 Analysis")
     rq2_results = analysis.run_rq2_analysis(save_results=True)
     print("RQ2 Done")
