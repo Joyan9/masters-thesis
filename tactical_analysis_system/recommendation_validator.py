@@ -20,10 +20,10 @@ class RecommendationValidator:
             'avg_eigenvector_centrality', 'avg_path_length', 'centralization'
         ]
         
-    def run_comprehensive_validation(self) -> Dict:
+    def run_recommendation_validation(self) -> Dict:
         """Run complete validation analysis"""
         
-        print("Running Comprehensive Recommendation Validation...")
+        print("Running Recommendation Validation...")
         print("=" * 60)
         
         # 1. Performance Outcome Analysis

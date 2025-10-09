@@ -6,13 +6,8 @@ SYSTEM OVERVIEW:
 - Threshold Metrics: 6
 - Match Analyses: 5
 
-KEY FINDINGS FROM RQ1 INTEGRATION:
-- Match intensity is the strongest predictor of network structure
-- High intensity increases network density by 117%
-- Rules leverage this relationship for tactical recommendations
-
 MATCH ANALYSIS SUMMARY:
-- Total critical periods identified: 180
+- Total critical periods identified: 552
 - Most common recommendation types:
-  * none: 166 instances
-  * attacking: 14 instances
+  * none: 514 instances
+  * attacking: 38 instances

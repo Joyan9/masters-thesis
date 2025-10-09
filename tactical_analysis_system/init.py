@@ -22,7 +22,6 @@ __all__ = [
     'map_coordinates_to_zone',
     'create_sliding_windows',
     'get_context_label',
-    'RQ1Visualizer',
     'ThresholdAnalyzer',
     'RuleEngine', 
     'TacticalRecommendation',

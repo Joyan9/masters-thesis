@@ -228,7 +228,6 @@ def plot_example_networks(network_data, output_dir="results/plots/rq1"):
 if __name__ == "__main__":
     from tactical_analysis_system.main_analysis import MainAnalysis
     from tactical_analysis_system.data_loader import DataLoader
-    from tactical_analysis_system.visualizer import RQ1Visualizer
     import pandas as pd
     
     window_size = 10
@@ -238,8 +237,6 @@ if __name__ == "__main__":
     print("Running RQ1 Analysis...")
     rq1_results = analysis.run_rq1_analysis(max_matches=10, save_results=True, filepath=data_file)
     print("RQ1 Done")
-
-    import pandas as pd
 
     if 'network_metrics' in rq1_results:
         results_df = pd.DataFrame(rq1_results['network_metrics'])

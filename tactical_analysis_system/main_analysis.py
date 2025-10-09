@@ -7,17 +7,18 @@ from .context_analyzer import ContextAnalyzer
 from .network_builder import NetworkBuilder
 from .network_analyzer import NetworkAnalyzer
 from .statistical_comparator import StatisticalComparator
-from .visualizer import RQ1Visualizer
-
+from .tactical_recommender import TacticalRecommender
+from .recommendation_validator import RecommendationValidator
+from .counterfactual_analyzer import CounterfactualAnalyzer
 
 class MainAnalysis:
-    """Main analysis pipeline for RQ1: Contextual Network Analysis"""
+    """Main analysis system for tactical analysis in football"""
     
     def __init__(self, use_saved_data: bool = True, 
                         data_file: str = "statsbomb_data_interim_100.json", 
-                        window_size: int = 10, 
-                        step_size: int = 5, 
-                        min_passes: int = 10):
+                        window_size: int = 5, 
+                        step_size: int = 1, 
+                        min_passes: int = 20):
         """Initialize analysis system
         
         Args:
@@ -52,45 +53,14 @@ class MainAnalysis:
                 raise
         else:
             print("⚠️  Will load data from API (slower)")
-    
-    def create_visualizations(self):
-        """Create comprehensive visualizations for RQ1"""
-        if not self.results:
-            print("No results available. Run analysis first.")
-            return
-        
-        visualizer = RQ1Visualizer()
-        
-        # Create all plots
-        plots = visualizer.create_all_rq1_plots(
-            self.results['network_metrics'],
-            self.results['statistical_results'],
-            save_plots=True
-        )
-        
-        # Create key findings summary
-        summary_plot = visualizer.create_key_findings_summary(
-            self.results['network_metrics'],
-            self.results['statistical_results'],
-            save_plots=True
-        )
-        
-        if summary_plot:
-            plots.append(summary_plot)
-        
-        self.results['plots'] = plots
-        
-        print(f"\n🎨 Created {len(plots)} visualization plots")
-        print("📊 Key Finding: Match intensity shows LARGE effects on network structure!")
-        
-        return plots
 
     def run_rq1_analysis(self, 
                            max_matches: int = 100,
-                           save_results: bool = True, 
-                           create_plots: bool = True, 
+                           save_results: bool = True,  
                            filepath: str = "statsbomb_data_interim_100.json") -> Dict:
-            """Run RQ1 analysis using pre-loaded data"""
+            
+            """Run RQ1: Contextual Network Analysis"""
+            
             print("RUNNING RQ1: NETWORK ANALYSIS")
             print("=" * 60)
             
@@ -126,9 +96,9 @@ class MainAnalysis:
                         )
                         all_context_windows.extend(windows)
                     else:
-                        print(f"⚠️  No events found for match {match_id}")
+                        print(f"No events found for match {match_id}")
             else:
-                print("❌ No matches data available")
+                print("No matches data available")
                 # Try using matches_data DataFrame instead
                 if not self.data_loader.matches_data.empty:
                     print("Using matches_data DataFrame...")
@@ -143,12 +113,12 @@ class MainAnalysis:
                             )
                             all_context_windows.extend(windows)
             
-            print(f"✅ Extracted {len(all_context_windows)} context windows")
+            print(f"Extracted {len(all_context_windows)} context windows")
             
             # Step 3: Build networks
             print("\n3. Building passing networks...")
             network_data = self.network_builder.build_networks_from_windows(all_context_windows)
-            print(f"✅ Built {len(network_data)} networks")
+            print(f"Built {len(network_data)} networks")
             
             # Step 4: Calculate network metrics
             print("\n4. Calculating network metrics...")
@@ -172,7 +142,7 @@ class MainAnalysis:
                     results_list.append(result)
             
             results_df = pd.DataFrame(results_list)
-            print(f"✅ Calculated metrics for {len(results_df)} windows")
+            print(f"Calculated metrics for {len(results_df)} windows")
             
             # Step 5: Statistical analysis
             print("\n5. Performing statistical analysis...")
@@ -180,7 +150,7 @@ class MainAnalysis:
             
             # Step 6: Generate report
             print("\n6. Generating report...")
-            report = self.statistical_comparator.generate_comprehensive_report()
+            report = self.statistical_comparator.generate_statistical_report()
             
             # Store results
             self.results = {
@@ -189,16 +159,12 @@ class MainAnalysis:
                 'statistical_results': statistical_results,
                 'report': report
             }
-            
-            if create_plots:
-                print("\n7. Creating visualizations...")
-                #self.create_visualizations()
 
             # Save results
             if save_results:
                 self._save_results()
             
-            print("\n✅ Analysis complete!")
+            print("\nAnalysis complete!")
             print(f"Total context windows analyzed: {len(all_context_windows)}")
             print(f"Total networks built: {len(network_data)}")
             print(f"Final dataset size: {len(results_df)} observations")
@@ -207,7 +173,7 @@ class MainAnalysis:
             if len(results_df) > 0:
                 self.print_summary()
             else:
-                print("⚠️  No data to summarize - check data loading and context extraction")
+                print("No data to summarize - check data loading and context extraction")
             
             return self.results
 
@@ -265,8 +231,6 @@ class MainAnalysis:
         print("RUNNING RQ2: RULE-BASED TACTICAL RECOMMENDATIONS")
         print("=" * 60)
 
-        from .tactical_recommender import TacticalRecommender
-
         # Initialize recommendation system
         recommender = TacticalRecommender(self.results)
         recommender.initialize_system(self.results['network_metrics'])
@@ -301,62 +265,8 @@ class MainAnalysis:
 
         return rq2_results
 
-
-    def run_threshold_optimization(self, 
-                               n_iterations: int = 100,
-                               save_results: bool = True) -> Dict:
-        """Run IMPROVED threshold optimization"""
-        
-        if 'network_metrics' not in self.results:
-            raise ValueError("Run RQ1 first")
-        
-        print("\n" + "="*60)
-        print("RUNNING IMPROVED THRESHOLD OPTIMIZATION")
-        print("="*60)
-        
-        from .threshold_optimizer import ImprovedThresholdOptimizer
-        
-        # Use improved optimizer
-        optimizer = ImprovedThresholdOptimizer(
-            network_data=self.results['network_metrics']
-        )
-
-        # RUN WITH DIAGNOSTICS
-        optimization_results = optimizer.optimize(
-            n_iterations=n_iterations,
-            n_initial_points=min(20, n_iterations // 5),
-            random_state=42,
-            run_diagnostics=True  # ← Enable diagnostics
-        )
-        
-        # Run optimization
-        optimization_results = optimizer.optimize(
-            n_iterations=n_iterations,
-            n_initial_points=min(20, n_iterations // 5),
-            random_state=42
-        )
-        
-        # Check for errors
-        if 'error' in optimization_results:
-            print(f"\n❌ Optimization failed: {optimization_results['error']}")
-            return optimization_results
-        
-        # Save results
-        if save_results:
-            output_dir = self.results_dir / "threshold_optimization"
-            output_dir.mkdir(parents=True, exist_ok=True)
-            optimizer.save_results(optimization_results, output_dir=str(output_dir))
-        
-        self.results['threshold_optimization'] = optimization_results
-        
-        print(f"\n✅ Optimization Complete!")
-        print(f"📊 Best Score: {optimization_results['best_score']:.4f}")
-        print(f"📈 Improvement: {optimization_results['improvement']:+.4f}")
-        
-        return optimization_results
-
     def _generate_match_recommendations(self, recommender) -> list[dict]:
-        """Generate recommendations for sample matches"""
+        """Generate recommendations for each match"""
         
         # Get unique matches from the dataset
         if 'match_id' in self.results['network_metrics'].columns:
@@ -382,7 +292,7 @@ class MainAnalysis:
         return []
 
     def _create_recommendation_report(self, recommender, match_recs) -> str:
-        """Create comprehensive recommendation report"""
+        """Create recommendation report"""
         
         report_lines = [
             "TACTICAL RECOMMENDATION SYSTEM REPORT",
@@ -391,12 +301,7 @@ class MainAnalysis:
             "SYSTEM OVERVIEW:",
             f"- Total Rules: {len(recommender.rule_engine.rules)}",
             f"- Threshold Metrics: {len(recommender.threshold_analyzer.thresholds)}",
-            f"- Match Analyses: {len(match_recs)}",
-            "",
-            "KEY FINDINGS FROM RQ1 INTEGRATION:",
-            "- Match intensity is the strongest predictor of network structure",
-            "- High intensity increases network density by 117%",
-            "- Rules leverage this relationship for tactical recommendations"
+            f"- Match Analyses: {len(match_recs)}"
         ]
         
         # Add match analysis summary
@@ -453,9 +358,6 @@ class MainAnalysis:
         print("RUNNING RQ3: RECOMMENDATION VALIDATION")
         print("="*60)
         
-        from .recommendation_validator import RecommendationValidator
-        from .counterfactual_analyzer import CounterfactualAnalyzer
-        
         # Get RQ2 data
         rq2_results = self.results['rq2_results']
         recommendations_data = rq2_results.get('match_recommendations', [])
@@ -469,7 +371,7 @@ class MainAnalysis:
             self.results['network_metrics'], 
             recommendations_data
         )
-        validation_results = validator.run_comprehensive_validation()
+        validation_results = validator.run_recommendation_validation()
         
         # 2. Run counterfactual analysis
         print("\n2. Running counterfactual analysis...")
@@ -479,7 +381,7 @@ class MainAnalysis:
         )
         counterfactual_results = counterfactual_analyzer.run_counterfactual_analysis()
         
-        # 3. Create comprehensive validation report
+        # 3. Create validation report
         print("\n3. Creating validation report...")
         validation_report = self._create_rq3_report(
             validation_results, counterfactual_results
@@ -501,14 +403,14 @@ class MainAnalysis:
         # Add to main results
         self.results['rq3_results'] = rq3_results
         
-        print(f"\n✅ RQ3 Analysis Complete!")
-        print(f"📊 Validation Score: {validation_results['overall_validation_score']['overall_validation_score']:.3f}")
+        print(f"\nRQ3 Analysis Complete!")
+        print(f"Validation Score: {validation_results['overall_validation_score']['overall_validation_score']:.3f}")
         
         return rq3_results
 
     def _create_rq3_report(self, validation_results: Dict, 
                         counterfactual_results: Dict) -> str:
-        """Create comprehensive RQ3 validation report"""
+        """Create RQ3 validation report"""
         
         report_lines = [
             "RQ3: RECOMMENDATION VALIDATION ANALYSIS REPORT",
@@ -524,11 +426,11 @@ class MainAnalysis:
         # Add key findings from validation
         overall_score = validation_results['overall_validation_score']['overall_validation_score']
         if overall_score >= 0.7:
-            report_lines.append("✅ STRONG VALIDATION: Recommendations show high effectiveness")
+            report_lines.append("STRONG VALIDATION: Recommendations show high effectiveness")
         elif overall_score >= 0.6:
-            report_lines.append("✅ MODERATE VALIDATION: Recommendations show good effectiveness")
+            report_lines.append("MODERATE VALIDATION: Recommendations show good effectiveness")
         else:
-            report_lines.append("⚠️  WEAK VALIDATION: Recommendations need improvement")
+            report_lines.append("WEAK VALIDATION: Recommendations need improvement")
         
         # Add component analysis
         report_lines.extend([
@@ -553,11 +455,11 @@ class MainAnalysis:
             ])
             
             if improvement_rate > 0.6:
-                report_lines.append("✅ High likelihood of performance improvement")
+                report_lines.append("High likelihood of performance improvement")
             elif improvement_rate > 0.4:
-                report_lines.append("✅ Moderate likelihood of performance improvement")
+                report_lines.append("Moderate likelihood of performance improvement")
             else:
-                report_lines.append("⚠️  Low likelihood of performance improvement")
+                report_lines.append("Low likelihood of performance improvement")
         
         # Add detailed validation findings
         report_lines.extend([
@@ -614,11 +516,11 @@ class MainAnalysis:
             ])
             
             if overall_quality > 0.7:
-                report_lines.append("   ✅ High-quality predictive models")
+                report_lines.append("High-quality predictive models")
             elif overall_quality > 0.5:
-                report_lines.append("   ✅ Moderate-quality predictive models")
+                report_lines.append("Moderate-quality predictive models")
             else:
-                report_lines.append("   ⚠️  Low-quality predictive models")
+                report_lines.append("Low-quality predictive models")
 
             # Add per-metric RMSE, MAE, R²
             if 'individual_models' in model_perf:
@@ -678,16 +580,7 @@ class MainAnalysis:
         with open(summary_path, 'w') as f:
             json.dump(validation_summary, f, indent=2)
         
-        print(f"📁 RQ3 results saved to {self.results_dir}")
+        print(f"RQ3 results saved to {self.results_dir}")
 
 if __name__ == "__main__":
-    window_size = 10
-    data_file = "statsbomb_data_interim_100.json"
-    analysis = MainAnalysis(use_saved_data=True, data_file=data_file, 
-                            window_size=window_size)
-        
-    # Run analyses and create visualizations for each RQ
-    print("Running RQ1 Analysis...")
-    rq1_results = analysis.run_rq1_analysis(max_matches=10, save_results=True, filepath=data_file)
-    print("rq1_results.keys():", rq1_results.keys())
-    #print(rq1_results)
+    pass

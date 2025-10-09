@@ -235,9 +235,9 @@ class StatisticalComparator:
         
         return effect_sizes
     
-    def generate_comprehensive_report(self) -> str:
-        """Generate a comprehensive statistical report"""
-        report = "COMPREHENSIVE CONTEXTUAL NETWORK ANALYSIS REPORT\n"
+    def generate_statistical_report(self) -> str:
+        """Generate a statistical report"""
+        report = "CONTEXTUAL NETWORK ANALYSIS REPORT\n"
         report += "=" * 60 + "\n\n"
         
         for context_type, results in self.comparison_results.items():

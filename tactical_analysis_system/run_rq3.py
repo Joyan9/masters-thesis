@@ -12,7 +12,6 @@ from statsmodels.stats.proportion import proportion_confint
 
 from tactical_analysis_system.main_analysis import MainAnalysis
 from tactical_analysis_system.data_loader import DataLoader
-from tactical_analysis_system.visualizer import RQ1Visualizer
 
 # Add current directory to path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -164,10 +163,11 @@ if __name__ == "__main__":
    
     try:
         # Use a single window size for analysis
-        window_size = 10
+        window_size = 5
+        step_size = 1
         print(f"\n=== Running analysis for window size: {window_size} minutes ===")
         analysis = MainAnalysis(use_saved_data=True, data_file=data_file, 
-                              window_size=window_size, step_size=window_size//2 or 1)
+                              window_size=window_size, step_size=step_size)
         
         # Run analyses and create visualizations for each RQ
         print("\n1. Running RQ1 Analysis...")

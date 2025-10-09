@@ -11,7 +11,6 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
-
 class RecommendationType(Enum):
     SPATIAL = "spatial"
     TEMPO = "tempo" 

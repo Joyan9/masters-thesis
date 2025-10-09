@@ -6,7 +6,7 @@ from .utils import create_sliding_windows, get_context_label
 class ContextAnalyzer:
     """Analyzes match contexts using sliding windows"""
     
-    def __init__(self, window_size=10, step_size=5, min_passes=10):
+    def __init__(self, window_size=10, step_size=5, min_passes=20):
         self.window_size = window_size
         self.step_size = step_size
         self.min_passes = min_passes
@@ -30,7 +30,7 @@ class ContextAnalyzer:
         score_progression = self._calculate_score_progression(df, teams)
         
         # Create sliding windows
-        windows = create_sliding_windows(95, self.window_size, self.step_size)
+        windows = create_sliding_windows(91, self.window_size, self.step_size)
         context_windows = []
         
         for start_min, end_min in windows:
@@ -58,7 +58,7 @@ class ContextAnalyzer:
         score_progression = {}
         home_score, away_score = 0, 0
 
-        for minute in range(91):  # 0-90
+        for minute in range(91):  
             minute_goals = goals[goals['minute'] <= minute]
 
             home_score = len(minute_goals[minute_goals['team'] == home_team])
