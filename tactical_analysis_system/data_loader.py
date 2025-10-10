@@ -7,7 +7,38 @@ from pathlib import Path
 
 
 class DataLoader:
+    """
+    Data loader for StatsBomb football match data.
+    
+    This class handles downloading, processing, and storing football match data from 
+    StatsBomb's open data API. It manages both raw data (matches and events) and 
+    creates pandas DataFrames for compatibility with the analysis system.
+    
+    Attributes
+    ----------
+    matches : list of dict
+        List of match metadata dictionaries containing information like match_id,
+        competition, season, teams, scores, etc.
+    events : dict
+        Dictionary mapping match_id to list of event dictionaries. Each event
+        contains detailed information about actions during the match (passes,
+        shots, tackles, etc.).
+    matches_data : pd.DataFrame
+        DataFrame version of matches for analysis compatibility.
+    events_data : pd.DataFrame
+        DataFrame version of all events across all matches.
+    lineups_data : pd.DataFrame
+        DataFrame for lineup information (currently empty, reserved for future use).
+   
+    """
+    
     def __init__(self):
+        """
+        Initialize DataLoader with empty data structures.
+        
+        Creates empty containers for matches, events, and their DataFrame
+        representations.
+        """
         self.matches = []
         self.events = {}
         # Initialize pandas DataFrames for compatibility with analysis system
@@ -17,7 +48,44 @@ class DataLoader:
         self.lineups_data = pd.DataFrame()
     
     def load_data(self, competitions, max_matches=None, batch_size=10, save_interval=None):
-        """Load matches and events data in batches"""
+        """
+        Load matches and events data from StatsBomb API in batches.
+        
+        Downloads match metadata and event data for specified competitions and seasons.
+        Processes data in batches to manage memory and allows intermediate saves to
+        prevent data loss during long-running downloads.
+        
+        Parameters
+        ----------
+        competitions : list of tuple
+            List of (competition_id, season_id) tuples specifying which competitions
+            and seasons to download. Example: [(11, 90), (43, 3)] for La Liga 2020/21
+            and FIFA World Cup 2018.
+        max_matches : int, optional
+            Maximum number of matches to process. If None, processes all available
+            matches. Useful for testing or limiting dataset size. Default is None.
+        batch_size : int, default=10
+            Number of matches to process in each batch before pausing. Helps manage
+            API load and memory usage.
+        save_interval : int, optional
+            Number of matches after which to save interim data. For example, if
+            save_interval=100, data will be saved after every 100 matches processed.
+            If None, no interim saves are performed. Default is None.
+        
+        Returns
+        -------
+        self : DataLoader
+            Returns self for method chaining.
+        
+        Notes
+        -----
+        - Includes automatic retry logic and error handling for failed API calls
+        - Adds small delays (0.1s between matches, 0.5s between batches) to avoid
+          overwhelming the API
+        - Creates DataFrame versions of data automatically via _create_dataframes()
+        - Prints progress updates every 10 matches and after each batch
+        
+        """
         
         # Load matches first
         for comp_id, season_id in competitions:
@@ -86,7 +154,28 @@ class DataLoader:
         return self
     
     def _create_dataframes(self):
-        """Create pandas DataFrames from loaded data for analysis compatibility"""
+        """
+        Create pandas DataFrames from loaded data for analysis compatibility.
+        
+        Converts the raw dictionary-based data structures (self.matches and self.events)
+        into pandas DataFrames. Performs data integrity checks, handles missing values,
+        and ensures essential fields are present.
+        
+        Notes
+        -----
+        - Converts date/timestamp columns to pandas datetime objects
+        - Handles missing location data by setting to [None, None]
+        - Drops events missing essential fields: 'type', 'team', 'minute'
+        - Adds match_id to each event for cross-referencing
+        - Creates empty lineups_data DataFrame for future compatibility
+        
+        Side Effects
+        ------------
+        - Sets self.matches_data
+        - Sets self.events_data
+        - Sets self.lineups_data (empty)
+        - Prints warnings if data integrity issues are found
+        """
         import pandas as pd
 
         # Data integrity checks and missing data handling
@@ -103,7 +192,7 @@ class DataLoader:
         for match_id, events_list in self.events.items():
             for event in events_list:
                 event['match_id'] = match_id
-                # Handle missing coordinates
+                # Handle missing coordinates - set to None for later filtering
                 if 'location' in event and (event['location'] is None or len(event['location']) < 2):
                     event['location'] = [None, None]
                 if 'pass_end_location' in event and (event['pass_end_location'] is None or len(event['pass_end_location']) < 2):
@@ -123,14 +212,30 @@ class DataLoader:
         else:
             self.events_data = pd.DataFrame()
 
-        # Create empty lineups_data for compatibility (if you need lineups later)
+        # Create empty lineups_data for compatibility (reserved for future use)
         if not hasattr(self, 'lineups_data'):
             self.lineups_data = pd.DataFrame()
 
         print(f"   - DataFrames created: {len(self.matches_data)} matches, {len(self.events_data)} events")
     
     def _save_interim_data(self, filename):
-        """Save interim data during batch processing"""
+        """
+        Save interim data during batch processing.
+        
+        Creates a checkpoint file during long-running data downloads. Useful for
+        preventing data loss if the download process is interrupted.
+        
+        Parameters
+        ----------
+        filename : str
+            Path where interim data should be saved.
+        
+        Notes
+        -----
+        - Saves with status='interim' to distinguish from complete datasets
+        - Includes timestamp for tracking when data was saved
+        - Uses default=str in json.dump to handle non-serializable objects
+        """
         output_data = {
             'matches': self.matches,
             'events': self.events,
@@ -144,7 +249,25 @@ class DataLoader:
             json.dump(output_data, f, indent=2, default=str)
 
     def save_data(self, filename):
-        """Save loaded data"""
+        """
+        Save complete loaded data to JSON file.
+        
+        Saves all matches, events, and DataFrame versions to a JSON file for
+        later reuse. This avoids re-downloading data from the API.
+        
+        Parameters
+        ----------
+        filename : str
+            Path where data should be saved.
+        
+        Notes
+        -----
+        - Saves with status='complete' to indicate full dataset
+        - Includes both raw data (matches, events) and DataFrame versions
+        - Includes metadata: timestamp, counts
+        - Uses default=str to handle datetime and other non-JSON-serializable types
+        
+        """
         output_data = {
             'matches': self.matches,
             'events': self.events,
@@ -172,7 +295,35 @@ class DataLoader:
         print(f"   - Events: {len(self.events)}")
 
     def load_from_json(self, filepath: str) -> 'DataLoader':
-        """Load previously saved data from JSON file"""
+        """
+        Load previously saved data from JSON file.
+        
+        Reconstructs a DataLoader object from a previously saved JSON file,
+        avoiding the need to re-download data from the API.
+        
+        Parameters
+        ----------
+        filepath : str
+            Path to the JSON file containing saved data.
+        
+        Returns
+        -------
+        self : DataLoader
+            Returns self for method chaining.
+        
+        Raises
+        ------
+        FileNotFoundError
+            If the specified filepath does not exist.
+        
+        Notes
+        -----
+        - Automatically converts date/timestamp columns to pandas datetime
+        - Ensures match_id is present in each event
+        - Creates empty lineups_data for compatibility
+        - Reconstructs both raw data (dict) and DataFrame versions
+        
+        """
         if not Path(filepath).exists():
             raise FileNotFoundError(f"Data file not found: {filepath}")
         
@@ -203,7 +354,7 @@ class DataLoader:
             for match_id, events_list in self.events.items():
                 for event in events_list:
                     event['match_id'] = match_id  # Ensure match_id is in each event
-                    all_events.extend([event])
+                    all_events.append(event)  # Note: Could use extend([event]) but append is clearer
             
             self.events_data = pd.DataFrame(all_events)
             # Convert timestamp column if it exists
@@ -220,76 +371,3 @@ class DataLoader:
         
         return self
     
-    def resume_loading(self, competitions, existing_data_file=None, batch_size=50, max_matches=None, save_interval=100):
-        """Resume loading from where it left off"""
-        print("🔄 Resuming data loading...")
-        
-        # Load existing data if provided
-        if existing_data_file and Path(existing_data_file).exists():
-            self.load_from_json(existing_data_file)
-            print(f"📁 Loaded existing data: {len(self.events)} events already collected")
-        
-        # Load matches if not already loaded
-        if not self.matches:
-            for comp_id, season_id in competitions:
-                try:
-                    season_matches = sb.matches(comp_id, season_id)
-                    self.matches.extend(season_matches.to_dict("records"))
-                    print(f"✅ Loaded {len(season_matches)} matches for comp {comp_id}, season {season_id}")
-                except Exception as e:
-                    print(f"❌ Error loading comp {comp_id}, season {season_id}: {e}")
-        
-        # Find matches that need events loaded
-        match_list = self.matches if max_matches is None else self.matches[:max_matches]
-        remaining_matches = [match for match in match_list 
-                           if str(match["match_id"]) not in self.events]
-        
-        total_collected = len(self.events)
-        total_remaining = len(remaining_matches)
-        total_matches = len(match_list)
-        
-        print(f"📊 Progress status:")
-        print(f"   - Already collected: {total_collected}/{total_matches} matches")
-        print(f"   - Remaining to process: {total_remaining} matches")
-        
-        if remaining_matches:
-            # Continue with batch processing for remaining matches
-            processed_in_resume = 0
-            
-            for i in range(0, len(remaining_matches), batch_size):
-                batch_end = min(i + batch_size, len(remaining_matches))
-                batch_matches = remaining_matches[i:batch_end]
-                
-                current_total = total_collected + processed_in_resume
-                print(f"\n🔄 Processing batch: matches {current_total + 1}-{current_total + len(batch_matches)} of {total_matches}")
-                
-                batch_success_count = 0
-                for match in batch_matches:
-                    mid = match["match_id"]
-                    try:
-                        self.events[mid] = sb.events(match_id=mid).to_dict("records")
-                        batch_success_count += 1
-                        processed_in_resume += 1
-                        
-                        if (total_collected + processed_in_resume) % 10 == 0:
-                            print(f"   ✅ Total processed: {total_collected + processed_in_resume}/{total_matches} matches")
-                        
-                        time.sleep(0.1)  # Small delay
-                    except Exception as e:
-                        print(f"   ❌ Failed to load events for match {mid}: {e}")
-                
-                print(f"   Batch complete: {batch_success_count}/{len(batch_matches)} successful")
-                
-                # Save interim data during resume if specified
-                if save_interval and (processed_in_resume % save_interval == 0):
-                    interim_filename = f"statsbomb_data_resumed_{total_collected + processed_in_resume}.json"
-                    self._save_interim_data(interim_filename)
-                    print(f"   💾 Saved interim data: {interim_filename}")
-                
-                # Brief pause between batches
-                time.sleep(0.5)
-        
-        final_total = len(self.events)
-        print(f"✅ Resume complete: {final_total} total events loaded")
-        print(f"   - New events collected: {final_total - total_collected}")
-        return self

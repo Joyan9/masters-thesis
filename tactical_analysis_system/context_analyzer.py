@@ -99,7 +99,7 @@ class ContextAnalyzer:
         else:  # Away team
             score_diff = -score_data['diff']
         
-        contexts = get_context_label(mid_minute, score_diff, None)
+        contexts = get_context_label(mid_minute, score_diff)
         
         # Calculate intensity
         pass_rate = len(team_passes) / self.window_size

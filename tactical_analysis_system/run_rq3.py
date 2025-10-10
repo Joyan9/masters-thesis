@@ -163,16 +163,16 @@ if __name__ == "__main__":
    
     try:
         # Use a single window size for analysis
-        window_size = 5
-        step_size = 1
+        window_size = 10
+        step_size = 5
         print(f"\n=== Running analysis for window size: {window_size} minutes ===")
         analysis = MainAnalysis(use_saved_data=True, data_file=data_file, 
                               window_size=window_size, step_size=step_size)
         
         # Run analyses and create visualizations for each RQ
         print("\n1. Running RQ1 Analysis...")
-        rq1_results = analysis.run_rq1_analysis(max_matches=100, save_results=True, filepath=data_file)
-                
+        rq1_results = analysis.run_rq1_analysis(max_matches=10, save_results=True, filepath=data_file)
+
         print("\n2. Running RQ2 Analysis...")
         rq2_results = analysis.run_rq2_analysis(save_results=True)
         

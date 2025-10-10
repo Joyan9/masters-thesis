@@ -7,7 +7,7 @@ SYSTEM OVERVIEW:
 - Match Analyses: 5
 
 MATCH ANALYSIS SUMMARY:
-- Total critical periods identified: 552
+- Total critical periods identified: 167
 - Most common recommendation types:
-  * none: 514 instances
-  * attacking: 38 instances
+  * none: 156 instances
+  * attacking: 11 instances

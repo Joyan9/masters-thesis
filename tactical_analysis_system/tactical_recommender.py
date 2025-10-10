@@ -42,7 +42,6 @@ class TacticalRecommendation:
     context_specificity: float
 
 class TemporalTracker:
-    """Simple temporal consistency tracking"""
     
     def __init__(self):
         self.recent_recommendations = []
@@ -96,7 +95,6 @@ class TemporalTracker:
         return stable_factors / total_factors > 0.6 if total_factors > 0 else False
 
 class ThresholdAnalyzer:
-    """Simple threshold analysis"""
     
     def __init__(self):
         self.thresholds = {}
@@ -133,106 +131,106 @@ class RuleEngine:
         self.rules = self._create_rules()
     
     def _create_context_weights(self) -> Dict:
-        """Create strong context differentiation weights"""
+        """Aggressive context weights - prioritize attack and tempo"""
         return {
             'score_context': {
                 'leading': {
-                    'defensive': 3.0,
-                    'possession': 2.5,
+                    'defensive': 2.5,
+                    'possession': 2.0,
                     'connectivity': 1.8,
-                    'spatial': 0.3,
-                    'attacking': 0.2,
-                    'tempo': 0.5,
-                    'pressing': 0.4,
-                    'transition': 0.7
+                    'spatial': 0.5,
+                    'attacking': 1.0,
+                    'tempo': 1.0,
+                    'pressing': 0.9,
+                    'transition': 1.2,
                 },
                 'tied': {
-                    'attacking': 1.8,
-                    'tempo': 2.0,
-                    'pressing': 1.7,
-                    'transition': 1.9,
-                    'spatial': 1.5,
-                    'connectivity': 1.3,
-                    'possession': 1.1,
-                    'defensive': 0.8
+                    'attacking': 2.5,
+                    'tempo': 2.4,
+                    'pressing': 2.3,
+                    'transition': 2.3,
+                    'spatial': 1.8,
+                    'connectivity': 1.5,
+                    'possession': 1.2,
+                    'defensive': 0.8,
                 },
                 'trailing': {
-                    'attacking': 3.5,
-                    'tempo': 3.0,
-                    'pressing': 2.8,
-                    'transition': 3.2,
-                    'spatial': 2.0,
-                    'connectivity': 1.5,
-                    'possession': 0.2,
-                    'defensive': 0.1
+                    'attacking': 4.5,
+                    'tempo': 4.0,
+                    'pressing': 3.6,
+                    'transition': 3.8,
+                    'spatial': 2.8,
+                    'connectivity': 2.0,
+                    'possession': 0.1,
+                    'defensive': 0.05,
                 }
             },
             'phase_context': {
                 'early': {
                     'possession': 2.0,
                     'connectivity': 1.8,
-                    'spatial': 1.6,
-                    'defensive': 1.4,
-                    'tempo': 0.7,
-                    'attacking': 0.8,
-                    'pressing': 0.9,
-                    'transition': 1.0
+                    'spatial': 1.5,
+                    'defensive': 1.3,
+                    'tempo': 0.9,
+                    'attacking': 1.0,
+                    'pressing': 1.1,
+                    'transition': 1.2,
                 },
                 'middle': {
-                    'attacking': 1.6,
-                    'pressing': 1.5,
-                    'transition': 1.7,
-                    'tempo': 1.4,
-                    'spatial': 1.3,
-                    'connectivity': 1.2,
-                    'possession': 1.1,
-                    'defensive': 1.0
+                    'attacking': 2.2,
+                    'pressing': 2.0,
+                    'transition': 2.3,
+                    'tempo': 2.0,
+                    'spatial': 1.6,
+                    'connectivity': 1.5,
+                    'possession': 1.3,
+                    'defensive': 1.0,
                 },
                 'late': {
-                    'attacking': 2.5,
+                    'attacking': 3.5,
                     'defensive': 2.2,
-                    'tempo': 2.3,
-                    'pressing': 2.0,
-                    'transition': 1.8,
-                    'spatial': 1.5,
-                    'connectivity': 1.3,
-                    'possession': 1.6
+                    'tempo': 3.2,
+                    'pressing': 3.0,
+                    'transition': 2.8,
+                    'spatial': 2.0,
+                    'connectivity': 1.7,
+                    'possession': 1.5,
                 }
             },
             'intensity_context': {
                 'low': {
-                    'tempo': 3.0,
-                    'pressing': 2.5,
-                    'attacking': 2.0,
-                    'transition': 1.8,
-                    'spatial': 1.2,
-                    'connectivity': 1.1,
-                    'possession': 0.8,
-                    'defensive': 0.7
+                    'tempo': 3.8,
+                    'pressing': 3.5,
+                    'attacking': 3.0,
+                    'transition': 2.6,
+                    'spatial': 1.6,
+                    'connectivity': 1.4,
+                    'possession': 0.5,
+                    'defensive': 0.4,
                 },
                 'medium': {
-                    'spatial': 1.5,
-                    'connectivity': 1.4,
-                    'possession': 1.3,
-                    'defensive': 1.2,
-                    'attacking': 1.1,
-                    'tempo': 1.0,
-                    'pressing': 1.0,
-                    'transition': 1.1
+                    'spatial': 1.8,
+                    'connectivity': 1.6,
+                    'possession': 1.5,
+                    'defensive': 1.3,
+                    'attacking': 1.6,
+                    'tempo': 1.5,
+                    'pressing': 1.4,
+                    'transition': 1.5,
                 },
                 'high': {
                     'defensive': 2.0,
                     'possession': 2.2,
                     'connectivity': 1.8,
                     'spatial': 1.5,
-                    'attacking': 0.6,
-                    'tempo': 0.5,
-                    'pressing': 0.4,
-                    'transition': 1.0
+                    'attacking': 0.8,
+                    'tempo': 0.7,
+                    'pressing': 0.6,
+                    'transition': 1.0,
                 }
             }
         }
-    
+
     def _create_rules(self) -> List:
         """Create focused tactical rules"""
         rules = []
