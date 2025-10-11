@@ -90,10 +90,13 @@ class MainAnalysis:
                 for match in matches_to_process:
                     match_id = str(match['match_id'])  # Ensure string format
                     if match_id in self.data_loader.events:
-                        print(f"Processing match {match_id}...")
+                        print(f"Processing match {match_id} - {match['home_team']} vs {match['away_team']}")
                         windows = self.context_analyzer.extract_context_windows(
-                            self.data_loader.events[match_id], match_id
-                        )
+                                    events=self.data_loader.events[match_id],
+                                    match_id=match_id,
+                                    home_team=match['home_team'],  
+                                    away_team=match['away_team'] 
+                                )
                         all_context_windows.extend(windows)
                     else:
                         print(f"No events found for match {match_id}")
