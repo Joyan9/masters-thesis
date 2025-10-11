@@ -9,5 +9,6 @@ SYSTEM OVERVIEW:
 MATCH ANALYSIS SUMMARY:
 - Total critical periods identified: 167
 - Most common recommendation types:
-  * none: 156 instances
+  * tempo: 82 instances
+  * none: 74 instances
   * attacking: 11 instances
