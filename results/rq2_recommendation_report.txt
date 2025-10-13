@@ -2,13 +2,13 @@ TACTICAL RECOMMENDATION SYSTEM REPORT
 ==================================================
 
 SYSTEM OVERVIEW:
-- Total Rules: 5
+- Total Rules: 8
 - Threshold Metrics: 6
 - Match Analyses: 5
 
 MATCH ANALYSIS SUMMARY:
-- Total critical periods identified: 167
+- Total critical periods identified: 48
 - Most common recommendation types:
-  * tempo: 82 instances
-  * none: 74 instances
-  * attacking: 11 instances
+  * none: 75 instances
+  * attacking: 49 instances
+  * possession: 32 instances
