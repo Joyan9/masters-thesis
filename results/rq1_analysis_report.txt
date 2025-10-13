@@ -1,10 +1,15 @@
 CONTEXTUAL NETWORK ANALYSIS REPORT
 ============================================================
+Significance level: α = 0.05
+Minimum sample size: n ≥ 10
+Multiple testing correction: Holm-Bonferroni
+============================================================
 
 CONTEXT TYPE: SCORE CONTEXT
-----------------------------------------
+------------------------------------------------------------
 
 DESCRIPTIVE STATISTICS:
+----------------------------------------
 
 Density:
   leading: M=0.037, SD=0.011, n=59
@@ -36,47 +41,77 @@ Centralization:
   tied: M=0.002, SD=0.001, n=217
   trailing: M=0.002, SD=0.001, n=56
 
-STATISTICAL TESTS:
+ASSUMPTION TESTING:
+----------------------------------------
 
 Density:
-  Kruskal-Wallis: χ²/F = 6.021, p = 0.049 ***
-  Effect size: η² = 0.018 (small)
+  Normality: non_parametric
+  Variance homogeneity: Yes
 
 Clustering Coefficient:
-  Kruskal-Wallis: χ²/F = 0.705, p = 0.703  (ns)
-  Effect size: η² = 0.002 (negligible)
+  Normality: non_parametric
+  Variance homogeneity: Yes
 
 Avg Betweenness Centrality:
-  Kruskal-Wallis: χ²/F = 5.323, p = 0.070  (ns)
-  Effect size: η² = 0.015 (small)
+  Normality: non_parametric
+  Variance homogeneity: No
 
 Avg Eigenvector Centrality:
-  Kruskal-Wallis: χ²/F = 3.831, p = 0.147  (ns)
-  Effect size: η² = 0.011 (small)
+  Normality: non_parametric
+  Variance homogeneity: Yes
 
 Avg Path Length:
-  One-way ANOVA: χ²/F = 2.411, p = 0.091  (ns)
-  Effect size: η² = 0.014 (small)
+  Normality: parametric
+  Variance homogeneity: Yes
 
 Centralization:
-  Kruskal-Wallis: χ²/F = 1.302, p = 0.522  (ns)
-  Effect size: η² = 0.002 (negligible)
+  Normality: non_parametric
+  Variance homogeneity: Yes
+
+STATISTICAL TESTS:
+----------------------------------------
+
+Density:
+  Kruskal-Wallis: H = 6.021, p = 0.0493 (corrected: p = 0.6898) (ns)
+  Effect size: η² = 0.018 (small, 1.8% variance)
+  Practical significance: ✗ (max Δ = 0.005, threshold = 0.050)
+
+Clustering Coefficient:
+  Kruskal-Wallis: H = 0.705, p = 0.7030 (corrected: p = 1.0000) (ns)
+  Effect size: η² = 0.002 (negligible, 0.2% variance)
+  Practical significance: ✗ (max Δ = 0.002, threshold = 0.050)
+
+Avg Betweenness Centrality:
+  Kruskal-Wallis: H = 5.323, p = 0.0699 (corrected: p = 0.9081) (ns)
+  Effect size: η² = 0.015 (small, 1.5% variance)
+  Practical significance: ✗ (max Δ = 0.004, threshold = 0.050)
+
+Avg Eigenvector Centrality:
+  Kruskal-Wallis: H = 3.831, p = 0.1472 (corrected: p = 1.0000) (ns)
+  Effect size: η² = 0.011 (small, 1.1% variance)
+  Practical significance: ✗ (max Δ = 0.004, threshold = 0.050)
+
+Avg Path Length:
+  One-way ANOVA: F = 2.411, p = 0.0913 (corrected: p = 1.0000) (ns)
+  Effect size: η² = 0.014 (small, 1.4% variance)
+  Practical significance: ✓ (max Δ = 17.858, threshold = 0.200)
+
+Centralization:
+  Kruskal-Wallis: H = 1.302, p = 0.5215 (corrected: p = 1.0000) (ns)
+  Effect size: η² = 0.002 (negligible, 0.2% variance)
+  Practical significance: ✗ (max Δ = 0.000, threshold = 0.100)
 
 SIGNIFICANT PAIRWISE COMPARISONS:
-
-  Density:
-    tied_vs_leading: p=0.041, d=-0.302, Δ=-0.003
-    leading_vs_trailing: p=0.021, d=0.447, Δ=0.005
-
-  Avg Path Length:
-    tied_vs_leading: p=0.030, d=-0.320, Δ=-17.858
+----------------------------------------
+  No significant pairwise differences found (after correction).
 
 ============================================================
 
 CONTEXT TYPE: PHASE CONTEXT
-----------------------------------------
+------------------------------------------------------------
 
 DESCRIPTIVE STATISTICS:
+----------------------------------------
 
 Density:
   early: M=0.037, SD=0.012, n=120
@@ -108,65 +143,88 @@ Centralization:
   late: M=0.002, SD=0.001, n=94
   middle: M=0.002, SD=0.001, n=118
 
-STATISTICAL TESTS:
+ASSUMPTION TESTING:
+----------------------------------------
 
 Density:
-  Kruskal-Wallis: χ²/F = 17.417, p = 0.000 ***
-  Effect size: η² = 0.055 (small)
+  Normality: non_parametric
+  Variance homogeneity: No
 
 Clustering Coefficient:
-  Kruskal-Wallis: χ²/F = 15.132, p = 0.001 ***
-  Effect size: η² = 0.036 (small)
+  Normality: non_parametric
+  Variance homogeneity: Yes
 
 Avg Betweenness Centrality:
-  Kruskal-Wallis: χ²/F = 10.405, p = 0.006 ***
-  Effect size: η² = 0.040 (small)
+  Normality: non_parametric
+  Variance homogeneity: No
 
 Avg Eigenvector Centrality:
-  Kruskal-Wallis: χ²/F = 6.952, p = 0.031 ***
-  Effect size: η² = 0.015 (small)
+  Normality: non_parametric
+  Variance homogeneity: Yes
 
 Avg Path Length:
-  Kruskal-Wallis: χ²/F = 11.304, p = 0.004 ***
-  Effect size: η² = 0.040 (small)
+  Normality: non_parametric
+  Variance homogeneity: Yes
 
 Centralization:
-  Kruskal-Wallis: χ²/F = 16.271, p = 0.000 ***
-  Effect size: η² = 0.045 (small)
+  Normality: non_parametric
+  Variance homogeneity: Yes
+
+STATISTICAL TESTS:
+----------------------------------------
+
+Density:
+  Kruskal-Wallis: H = 17.417, p = 0.0002 (corrected: p = 0.0059) **
+  Effect size: η² = 0.055 (small, 5.5% variance)
+  Practical significance: ✗ (max Δ = 0.007, threshold = 0.050)
+
+Clustering Coefficient:
+  Kruskal-Wallis: H = 15.132, p = 0.0005 (corrected: p = 0.0160) *
+  Effect size: η² = 0.036 (small, 3.6% variance)
+  Practical significance: ✗ (max Δ = 0.008, threshold = 0.050)
+
+Avg Betweenness Centrality:
+  Kruskal-Wallis: H = 10.405, p = 0.0055 (corrected: p = 0.1375) (ns)
+  Effect size: η² = 0.040 (small, 4.0% variance)
+  Practical significance: ✗ (max Δ = 0.007, threshold = 0.050)
+
+Avg Eigenvector Centrality:
+  Kruskal-Wallis: H = 6.952, p = 0.0309 (corrected: p = 0.5567) (ns)
+  Effect size: η² = 0.015 (small, 1.5% variance)
+  Practical significance: ✗ (max Δ = 0.006, threshold = 0.050)
+
+Avg Path Length:
+  Kruskal-Wallis: H = 11.304, p = 0.0035 (corrected: p = 0.0983) (ns)
+  Effect size: η² = 0.040 (small, 4.0% variance)
+  Practical significance: ✓ (max Δ = 27.286, threshold = 0.200)
+
+Centralization:
+  Kruskal-Wallis: H = 16.271, p = 0.0003 (corrected: p = 0.0100) **
+  Effect size: η² = 0.045 (small, 4.5% variance)
+  Practical significance: ✗ (max Δ = 0.000, threshold = 0.100)
 
 SIGNIFICANT PAIRWISE COMPARISONS:
+----------------------------------------
 
   Density:
-    early_vs_middle: p=0.017, d=0.332, Δ=0.004
-    early_vs_late: p=0.000, d=0.556, Δ=0.007
-    middle_vs_late: p=0.020, d=0.291, Δ=0.003
+    early_vs_late: p=0.0032 **, d=0.556, Δ=0.007 [0.003, 0.010]
 
   Clustering Coefficient:
-    early_vs_middle: p=0.006, d=0.339, Δ=0.006
-    early_vs_late: p=0.000, d=0.445, Δ=0.008
-
-  Avg Betweenness Centrality:
-    early_vs_late: p=0.002, d=0.473, Δ=0.007
-    middle_vs_late: p=0.011, d=0.404, Δ=0.006
-
-  Avg Eigenvector Centrality:
-    early_vs_late: p=0.012, d=0.310, Δ=0.006
-    middle_vs_late: p=0.040, d=0.140, Δ=0.003
+    early_vs_late: p=0.0110 *, d=0.445, Δ=0.008 [0.003, 0.013]
 
   Avg Path Length:
-    early_vs_late: p=0.001, d=0.479, Δ=27.286
-    middle_vs_late: p=0.033, d=0.351, Δ=19.490
+    early_vs_late: p=0.0299 *, d=0.479, Δ=27.286 [11.911, 42.660]
 
   Centralization:
-    early_vs_middle: p=0.004, d=0.324, Δ=0.000
-    early_vs_late: p=0.000, d=0.531, Δ=0.000
+    early_vs_late: p=0.0060 **, d=0.531, Δ=0.000 [0.000, 0.000]
 
 ============================================================
 
 CONTEXT TYPE: INTENSITY CONTEXT
-----------------------------------------
+------------------------------------------------------------
 
 DESCRIPTIVE STATISTICS:
+----------------------------------------
 
 Density:
   high: M=0.054, SD=0.004, n=30
@@ -198,57 +256,105 @@ Centralization:
   low: M=0.002, SD=0.001, n=165
   medium: M=0.002, SD=0.001, n=137
 
-STATISTICAL TESTS:
+ASSUMPTION TESTING:
+----------------------------------------
 
 Density:
-  Kruskal-Wallis: χ²/F = 256.395, p = 0.000 ***
-  Effect size: η² = 0.775 (large)
+  Normality: non_parametric
+  Variance homogeneity: Yes
 
 Clustering Coefficient:
-  Kruskal-Wallis: χ²/F = 88.520, p = 0.000 ***
-  Effect size: η² = 0.235 (large)
+  Normality: non_parametric
+  Variance homogeneity: Yes
 
 Avg Betweenness Centrality:
-  Kruskal-Wallis: χ²/F = 104.707, p = 0.000 ***
-  Effect size: η² = 0.317 (large)
+  Normality: non_parametric
+  Variance homogeneity: No
 
 Avg Eigenvector Centrality:
-  Kruskal-Wallis: χ²/F = 3.157, p = 0.206  (ns)
-  Effect size: η² = 0.005 (negligible)
+  Normality: non_parametric
+  Variance homogeneity: No
 
 Avg Path Length:
-  Kruskal-Wallis: χ²/F = 210.178, p = 0.000 ***
-  Effect size: η² = 0.596 (large)
+  Normality: non_parametric
+  Variance homogeneity: No
 
 Centralization:
-  Kruskal-Wallis: χ²/F = 72.412, p = 0.000 ***
-  Effect size: η² = 0.208 (large)
+  Normality: non_parametric
+  Variance homogeneity: Yes
+
+STATISTICAL TESTS:
+----------------------------------------
+
+Density:
+  Kruskal-Wallis: H = 256.395, p = 0.0000 (corrected: p = 0.0000) ***
+  Effect size: η² = 0.775 (large, 77.5% variance)
+  Practical significance: ✗ (max Δ = 0.030, threshold = 0.050)
+
+Clustering Coefficient:
+  Kruskal-Wallis: H = 88.520, p = 0.0000 (corrected: p = 0.0000) ***
+  Effect size: η² = 0.235 (large, 23.5% variance)
+  Practical significance: ✗ (max Δ = 0.026, threshold = 0.050)
+
+Avg Betweenness Centrality:
+  Kruskal-Wallis: H = 104.707, p = 0.0000 (corrected: p = 0.0000) ***
+  Effect size: η² = 0.317 (large, 31.7% variance)
+  Practical significance: ✗ (max Δ = 0.017, threshold = 0.050)
+
+Avg Eigenvector Centrality:
+  Kruskal-Wallis: H = 3.157, p = 0.2063 (corrected: p = 1.0000) (ns)
+  Effect size: η² = 0.005 (negligible, 0.5% variance)
+  Practical significance: ✗ (max Δ = 0.003, threshold = 0.050)
+
+Avg Path Length:
+  Kruskal-Wallis: H = 210.178, p = 0.0000 (corrected: p = 0.0000) ***
+  Effect size: η² = 0.596 (large, 59.6% variance)
+  Practical significance: ✓ (max Δ = 114.467, threshold = 0.200)
+
+Centralization:
+  Kruskal-Wallis: H = 72.412, p = 0.0000 (corrected: p = 0.0000) ***
+  Effect size: η² = 0.208 (large, 20.8% variance)
+  Practical significance: ✗ (max Δ = 0.001, threshold = 0.100)
 
 SIGNIFICANT PAIRWISE COMPARISONS:
+----------------------------------------
 
   Density:
-    low_vs_high: p=0.000, d=-5.567, Δ=-0.030
-    low_vs_medium: p=0.000, d=-2.888, Δ=-0.016
-    high_vs_medium: p=0.000, d=2.716, Δ=0.014
+    high_vs_low: p=0.0000 ***, d=5.567, Δ=0.030 [0.028, 0.032]
+    high_vs_medium: p=0.0000 ***, d=2.716, Δ=0.014 [0.012, 0.016]
+    low_vs_medium: p=0.0000 ***, d=-2.888, Δ=-0.016 [-0.017, -0.015]
 
   Clustering Coefficient:
-    low_vs_high: p=0.000, d=-1.582, Δ=-0.026
-    low_vs_medium: p=0.000, d=-0.913, Δ=-0.015
-    high_vs_medium: p=0.000, d=0.699, Δ=0.011
+    high_vs_low: p=0.0000 ***, d=1.582, Δ=0.026 [0.019, 0.032]
+    high_vs_medium: p=0.0118 *, d=0.699, Δ=0.011 [0.005, 0.017]
+    low_vs_medium: p=0.0000 ***, d=-0.913, Δ=-0.015 [-0.018, -0.011]
 
   Avg Betweenness Centrality:
-    low_vs_high: p=0.000, d=-1.236, Δ=-0.016
-    low_vs_medium: p=0.000, d=-1.337, Δ=-0.017
+    high_vs_low: p=0.0000 ***, d=1.236, Δ=0.016 [0.011, 0.021]
+    low_vs_medium: p=0.0000 ***, d=-1.337, Δ=-0.017 [-0.020, -0.014]
 
   Avg Path Length:
-    low_vs_high: p=0.000, d=-3.071, Δ=-114.467
-    low_vs_medium: p=0.000, d=-2.105, Δ=-76.405
-    high_vs_medium: p=0.000, d=1.203, Δ=38.062
+    high_vs_low: p=0.0000 ***, d=3.071, Δ=114.467 [99.969, 128.965]
+    high_vs_medium: p=0.0000 ***, d=1.203, Δ=38.062 [25.563, 50.561]
+    low_vs_medium: p=0.0000 ***, d=-2.105, Δ=-76.405 [-84.626, -68.183]
 
   Centralization:
-    low_vs_high: p=0.000, d=-1.516, Δ=-0.001
-    low_vs_medium: p=0.000, d=-0.864, Δ=-0.000
-    high_vs_medium: p=0.004, d=0.588, Δ=0.000
+    high_vs_low: p=0.0000 ***, d=1.516, Δ=0.001 [0.001, 0.001]
+    low_vs_medium: p=0.0000 ***, d=-0.864, Δ=-0.000 [-0.001, -0.000]
 
 ============================================================
 
+SUMMARY:
+------------------------------------------------------------
+Total context types analyzed: 3
+Total statistical tests: 18
+Significant results (corrected): 8
+Multiple testing correction: Holm-Bonferroni (FWER control)
+
+============================================================
+Legend:
+*** p < 0.001 (highly significant)
+**  p < 0.01 (very significant)
+*   p < 0.05 (significant)
+(ns) p ≥ 0.05 (not significant)
+============================================================
