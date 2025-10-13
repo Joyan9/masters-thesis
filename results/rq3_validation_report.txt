@@ -16,7 +16,7 @@ COMPONENT ANALYSIS:
 ✅ Elite Pattern Alignment: 1.000
 
 COUNTERFACTUAL ANALYSIS:
-Overall Improvement Rate: 61.2%
+Overall Improvement Rate: 63.8%
 High likelihood of performance improvement
 
 DETAILED VALIDATION RESULTS:
@@ -33,19 +33,19 @@ DETAILED VALIDATION RESULTS:
    Interpretation: Somewhat context-sensitive
 
 4. PREDICTIVE MODEL PERFORMANCE:
-   Overall Model Quality: 0.466
+   Overall Model Quality: 0.482
    Total Models Built: 6
 Low-quality predictive models
 
    Model Metrics (per network metric):
    Metric                |   R²    |   MAE   |  RMSE
    ---------------------|---------|---------|---------
-   density               |   0.510 |   0.008 |   0.011
-   clustering_coefficient |   0.468 |   0.013 |   0.017
-   avg_betweenness_centrality |   0.540 |   0.012 |   0.015
-   avg_eigenvector_centrality |   0.293 |   0.018 |   0.027
-   avg_path_length       |   0.550 |  46.730 |  55.788
-   centralization        |   0.435 |   0.000 |   0.001
+   density               |   0.580 |   0.009 |   0.011
+   clustering_coefficient |   0.437 |   0.016 |   0.021
+   avg_betweenness_centrality |   0.524 |   0.013 |   0.016
+   avg_eigenvector_centrality |   0.368 |   0.015 |   0.020
+   avg_path_length       |   0.595 |  44.659 |  54.884
+   centralization        |   0.387 |   0.001 |   0.001
 
 RECOMMENDATIONS FOR SYSTEM IMPROVEMENT:
 - Fine-tune recommendation timing
