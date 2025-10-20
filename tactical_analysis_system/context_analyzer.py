@@ -118,8 +118,19 @@ class ContextAnalyzer:
         away_team : str, optional
                 Name of away team. If not provided, will attempt to infer from events
                 (may be unreliable).
-        
-        ... rest of docstring ...
+        Returns
+        -------
+        list of dict
+                List of context window dictionaries, each containing:
+                - 'match_id': str
+                - 'team': str
+                - 'start_minute': float (window start time)
+                - 'end_minute': float (window end time)
+                - 'pass_count': int (number of passes in window)
+                - 'score_context': str, {leading, trailing, tied}
+                - 'phase_context': str, {early, middle, late}
+                - 'intensity_context': str, {low, medium, high}
+                - 'passes': list of dict (pass events in window)        
         """
         df = pd.DataFrame(events)
         
@@ -130,15 +141,6 @@ class ContextAnalyzer:
         # Get team names - use provided home/away or infer from data
         if home_team and away_team:
                 teams = (home_team, away_team)
-        else:
-                # Fallback: infer from events (unreliable for home/away order)
-                teams_in_data = df['team'].unique()
-                if len(teams_in_data) < 2:
-                        print(f"Warning: Only {len(teams_in_data)} teams found in match {match_id}")
-                        return []
-                teams = tuple(teams_in_data[:2])
-                print(f"Warning: Home/away teams not provided for match {match_id}. "
-                f"Inferring from data may be unreliable: {teams}")
         
         # Calculate score progression (optimized version)
         score_progression = self._calculate_score_progression(df, teams)
@@ -172,8 +174,7 @@ class ContextAnalyzer:
         df : pd.DataFrame
             DataFrame of match events, must include Shot events with 'shot_outcome'.
         teams : tuple of str
-            (home_team, away_team) names. Order determined by StatsBomb data structure
-            where teams[0] is home team and teams[1] is away team (per StatsBomb docs).
+            (home_team, away_team) names. 
         
         Returns
         -------
@@ -186,17 +187,6 @@ class ContextAnalyzer:
                     'diff': int (home_score - away_score)
                 }
             }
-        
-        Notes
-        -----
-        **Optimization**: This version is O(n log n) instead of O(n²):
-        - Filters goals once
-        - Sorts by minute
-        - Incrementally updates scores
-        
-        **Team Order**: Assumes teams[0] is home, teams[1] is away based on
-        StatsBomb data structure documentation. This is critical for correct
-        score difference calculation.
         
         """
         home_team, away_team = teams[0], teams[1]
@@ -292,18 +282,7 @@ class ContextAnalyzer:
         **Minimum Pass Filter**:
         - Windows with <min_passes are excluded (return None)
         - Ensures sufficient data for stable network metrics
-        
-        Examples
-        --------
-        >>> window = analyzer._analyze_window(
-        ...     df, 'TeamA', 10, 20, score_prog, '12345', ('TeamA', 'TeamB')
-        ... )
-        >>> window['score_context']
-        'leading'
-        >>> window['intensity_context']
-        'high'
-        >>> len(window['passes'])
-        45
+  
         """
         # Filter passes for this team and time window
         team_passes = df[
@@ -321,7 +300,7 @@ class ContextAnalyzer:
         mid_minute = int((start_min + end_min) / 2)
         score_data = score_progression.get(mid_minute, {teams[0]: 0, teams[1]: 0, 'diff': 0})
 
-        # Determine score context relative to this team (fixed version)
+        # Determine score context relative to this team
         home_team, away_team = teams[0], teams[1]
         
         if team == home_team:
@@ -377,16 +356,7 @@ class ContextAnalyzer:
         - Windows are not sorted; order depends on processing sequence
         - Each window includes 'match_id' for identification
         - Useful for creating datasets for RQ1 analysis
-        
-        Examples
-        --------
-        >>> analyzer = ContextAnalyzer()
-        >>> for match_id, events in data_loader.events.items():
-        ...     analyzer.extract_context_windows(events, match_id)
-        >>> all_windows = analyzer.get_all_windows()
-        >>> print(f"Total windows across all matches: {len(all_windows)}")
-        >>> # Group by context for analysis
-        >>> leading_windows = [w for w in all_windows if w['score_context'] == 'leading']
+
         """
         all_windows = []
         for match_windows in self.context_windows.values():
