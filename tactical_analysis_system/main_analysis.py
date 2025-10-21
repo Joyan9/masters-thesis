@@ -36,7 +36,7 @@ class MainAnalysis:
         self.min_passes = min_passes
         
         # Initialize results directory
-        self.results_dir = Path("./results/")
+        self.results_dir = Path("./final_results/")
         
         # Initialize components
         self.context_analyzer = ContextAnalyzer(window_size, step_size, min_passes)

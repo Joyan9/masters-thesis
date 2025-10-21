@@ -232,6 +232,7 @@ if __name__ == "__main__":
     
     window_size = 10
     step_size = 5
+    data_file = "/workspaces/masters-thesis/statsbomb_data_interim_100.json"
     analysis = MainAnalysis(use_saved_data=True, data_file=data_file, 
                             window_size=window_size, step_size=step_size)
 
