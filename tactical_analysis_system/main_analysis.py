@@ -224,8 +224,9 @@ class MainAnalysis:
 
         print(f"\nDetailed report saved to {self.results_dir / 'analysis_report.txt'}")
 
+
     def run_rq2_analysis(self, save_results: bool = True) -> dict:
-        """Run RQ2: Rule-Based Tactical Recommendations"""
+        """Run RQ2: Rule-Based Tactical Recommendations with Comprehensive Metrics"""
 
         if not self.results or 'network_metrics' not in self.results:
             raise ValueError("RQ1 results not available. Run RQ1 analysis first.")
@@ -242,10 +243,14 @@ class MainAnalysis:
         print("\nGenerating match-level recommendations...")
         match_recommendations = self._generate_match_recommendations(recommender)
 
+        # Calculate comprehensive RQ2 metrics
+        print("\nCalculating recommendation system metrics...")
+        rq2_metrics = self._calculate_rq2_metrics(recommender, match_recommendations)
+
         # Create recommendation report
         print("\nCreating recommendation report...")
         recommendation_report = self._create_recommendation_report(
-            recommender, match_recommendations
+            recommender, match_recommendations, rq2_metrics
         )
 
         # Store RQ2 results
@@ -253,7 +258,8 @@ class MainAnalysis:
             'recommender': recommender,
             'match_recommendations': match_recommendations,
             'recommendation_report': recommendation_report,
-            'system_summary': recommender.get_system_summary()
+            'system_summary': recommender.get_system_summary(),
+            'rq2_metrics': rq2_metrics  # NEW: Comprehensive metrics
         }
 
         # Save results
@@ -265,55 +271,460 @@ class MainAnalysis:
 
         print(f"\nRQ2 Analysis Complete!")
         print(f"Generated recommendations for {len(match_recommendations)} match scenarios")
+        print(f"Total windows analyzed: {rq2_metrics['coverage_metrics']['total_windows']}")
+        print(f"Coverage: {rq2_metrics['coverage_metrics']['coverage_percentage']:.1f}%")
 
         return rq2_results
 
-    def _generate_match_recommendations(self, recommender) -> list[dict]:
-        """Generate recommendations for each match"""
-        
-        # Get unique matches from the dataset
-        if 'match_id' in self.results['network_metrics'].columns:
-            unique_matches = self.results['network_metrics']['match_id'].unique()[:5]  # Sample 5 matches
-            
-            match_recommendations = []
-            
-            for match_id in unique_matches:
-                print(f"   Analyzing match: {match_id}")
-                
-                match_data = self.results['network_metrics'][
-                    self.results['network_metrics']['match_id'] == match_id
-                ]
-                
-                match_analysis = recommender.analyze_match_recommendations(
-                    match_data, str(match_id)
-                )
-                
-                match_recommendations.append(match_analysis)
-            
-            return match_recommendations
-        
-        return []
 
-    def _create_recommendation_report(self, recommender, match_recs) -> str:
-        """Create recommendation report"""
+    def _calculate_rq2_metrics(self, recommender, match_recommendations: list) -> dict:
+        """
+        Calculate comprehensive RQ2 metrics as specified in thesis report.
+        
+        Sections:
+        - 4.2.3.1 Rule Activation Metrics
+        - 4.2.3.2 Confidence Scoring
+        - 4.2.3.3 Temporal Consistency
+        """
+        
+        # Collect all window recommendations across matches
+        all_windows = []
+        for match in match_recommendations:
+            all_windows.extend(match['window_recommendations'])
+        
+        # ========================================================================
+        # 4.2.3.1 RULE ACTIVATION METRICS
+        # ========================================================================
+        
+        rule_activation_metrics = self._calculate_rule_activation_metrics(
+            recommender, all_windows
+        )
+        
+        # ========================================================================
+        # 4.2.3.2 CONFIDENCE SCORING METRICS
+        # ========================================================================
+        
+        confidence_metrics = self._calculate_confidence_metrics(all_windows)
+        
+        # ========================================================================
+        # 4.2.3.3 TEMPORAL CONSISTENCY METRICS
+        # ========================================================================
+        
+        temporal_metrics = self._calculate_temporal_consistency_metrics(
+            match_recommendations
+        )
+        
+        # ========================================================================
+        # COVERAGE AND DIVERSITY METRICS
+        # ========================================================================
+        
+        coverage_metrics = self._calculate_coverage_metrics(all_windows)
+        
+        return {
+            'rule_activation_metrics': rule_activation_metrics,
+            'confidence_metrics': confidence_metrics,
+            'temporal_consistency_metrics': temporal_metrics,
+            'coverage_metrics': coverage_metrics,
+            'total_windows_analyzed': len(all_windows),
+            'total_matches_analyzed': len(match_recommendations)
+        }
+
+
+    def _calculate_rule_activation_metrics(self, recommender, all_windows: list) -> dict:
+        """
+        Calculate rule activation metrics (Section 4.2.3.1).
+        
+        Metrics:
+        - Trigger frequency: Number of times each rule activated
+        - Context specificity: Rule activation distribution across contexts
+        - Coverage: Proportion of windows receiving recommendations
+        - Diversity: Number of unique recommendations generated
+        """
+        from collections import Counter, defaultdict
+        
+        # Track rule activations
+        rule_triggers = Counter()
+        rule_by_context = defaultdict(lambda: defaultdict(int))
+        recommendation_types = []
+        windows_with_recs = 0
+        
+        for window in all_windows:
+            if window['recommendations']:
+                windows_with_recs += 1
+                
+                for rec in window['recommendations']:
+                    # Count recommendation types (proxy for rule activation)
+                    rec_type = rec['type']
+                    recommendation_types.append(rec_type)
+                    rule_triggers[rec_type] += 1
+                    
+                    # Track context specificity
+                    context = window['current_context']
+                    score_ctx = context.get('score_context', 'unknown')
+                    phase_ctx = context.get('phase_context', 'unknown')
+                    intensity_ctx = context.get('intensity_context', 'unknown')
+                    
+                    context_key = f"{score_ctx}_{phase_ctx}_{intensity_ctx}"
+                    rule_by_context[rec_type][context_key] += 1
+        
+        # Calculate diversity (unique recommendation types)
+        unique_recommendations = len(set(recommendation_types))
+        
+        # Calculate context specificity scores
+        context_specificity = {}
+        for rec_type, contexts in rule_by_context.items():
+            total_activations = sum(contexts.values())
+            # Context specificity: entropy-based measure of distribution
+            probs = [count / total_activations for count in contexts.values()]
+            entropy = -sum(p * np.log2(p) if p > 0 else 0 for p in probs)
+            
+            # Normalize entropy (max entropy = log2(num_contexts))
+            max_entropy = np.log2(len(contexts)) if len(contexts) > 1 else 1
+            normalized_entropy = entropy / max_entropy if max_entropy > 0 else 0
+            
+            context_specificity[rec_type] = {
+                'specificity_score': round(1 - normalized_entropy, 3),  # 1 = very specific, 0 = uniform
+                'contexts_activated': len(contexts),
+                'total_activations': total_activations,
+                'context_distribution': dict(contexts)
+            }
+        
+        return {
+            'trigger_frequency': dict(rule_triggers.most_common()),
+            'total_triggers': sum(rule_triggers.values()),
+            'context_specificity': context_specificity,
+            'diversity': {
+                'unique_recommendation_types': unique_recommendations,
+                'total_recommendations': len(recommendation_types),
+                'diversity_ratio': round(unique_recommendations / len(recommendation_types), 3) if recommendation_types else 0
+            },
+            'coverage': {
+                'windows_with_recommendations': windows_with_recs,
+                'total_windows': len(all_windows),
+                'coverage_proportion': round(windows_with_recs / len(all_windows), 3) if all_windows else 0
+            }
+        }
+
+
+    def _calculate_confidence_metrics(self, all_windows: list) -> dict:
+        """
+        Calculate confidence scoring metrics (Section 4.2.3.2).
+        
+        Analyzes:
+        - Confidence score distribution
+        - Component contributions (urgency, context, temporal)
+        - Filtering effectiveness
+        """
+        confidence_scores = []
+        urgency_levels = []
+        context_specificities = []
+        temporal_consistencies = []
+        filtered_count = 0
+        
+        for window in all_windows:
+            if window['recommendations']:
+                for rec in window['recommendations']:
+                    conf_score = rec['confidence_score']
+                    confidence_scores.append(conf_score)
+                    context_specificities.append(rec['context_specificity'])
+                    
+                    # Track urgency
+                    urgency_levels.append(window['situation_analysis']['urgency_level'])
+                
+                # Temporal consistency (window-level)
+                temporal_consistencies.append(window['temporal_consistency'])
+            else:
+                # Count windows with no recommendations (filtered out)
+                filtered_count += 1
+        
+        # Calculate statistics
+        if confidence_scores:
+            conf_array = np.array(confidence_scores)
+            
+            confidence_distribution = {
+                'mean': round(np.mean(conf_array), 3),
+                'median': round(np.median(conf_array), 3),
+                'std': round(np.std(conf_array), 3),
+                'min': round(np.min(conf_array), 3),
+                'max': round(np.max(conf_array), 3),
+                'quartiles': {
+                    'q25': round(np.percentile(conf_array, 25), 3),
+                    'q50': round(np.percentile(conf_array, 50), 3),
+                    'q75': round(np.percentile(conf_array, 75), 3)
+                }
+            }
+            
+            # Confidence by level
+            confidence_levels = {
+                'low': sum(1 for c in confidence_scores if c < 0.4),
+                'medium': sum(1 for c in confidence_scores if 0.4 <= c < 0.6),
+                'high': sum(1 for c in confidence_scores if 0.6 <= c < 0.8),
+                'very_high': sum(1 for c in confidence_scores if c >= 0.8)
+            }
+            
+            # Component analysis
+            component_contributions = {
+                'urgency_factor': {
+                    'very_high': urgency_levels.count('very_high'),
+                    'high': urgency_levels.count('high'),
+                    'medium': urgency_levels.count('medium'),
+                    'normal': urgency_levels.count('normal')
+                },
+                'context_weight': {
+                    'mean': round(np.mean(context_specificities), 3),
+                    'std': round(np.std(context_specificities), 3)
+                },
+                'temporal_consistency': {
+                    'mean': round(np.mean(temporal_consistencies), 3),
+                    'std': round(np.std(temporal_consistencies), 3)
+                }
+            }
+        else:
+            confidence_distribution = {
+                'mean': 0, 'median': 0, 'std': 0, 'min': 0, 'max': 0,
+                'quartiles': {'q25': 0, 'q50': 0, 'q75': 0}
+            }
+            confidence_levels = {'low': 0, 'medium': 0, 'high': 0, 'very_high': 0}
+            component_contributions = {
+                'urgency_factor': {'very_high': 0, 'high': 0, 'medium': 0, 'normal': 0},
+                'context_weight': {'mean': 0, 'std': 0},
+                'temporal_consistency': {'mean': 0, 'std': 0}
+            }
+        
+        return {
+            'confidence_distribution': confidence_distribution,
+            'confidence_levels': confidence_levels,
+            'component_contributions': component_contributions,
+            'filtering_effectiveness': {
+                'total_recommendations': len(confidence_scores),
+                'filtered_windows': filtered_count,
+                'filter_rate': round(filtered_count / len(all_windows), 3) if all_windows else 0
+            },
+            'formula': 'Confidence = base_confidence + context_effect + temporal_boost'
+        }
+
+
+    def _calculate_temporal_consistency_metrics(self, match_recommendations: list) -> dict:
+        """
+        Calculate temporal consistency metrics (Section 4.2.3.3).
+        
+        Definition: Stability of recommendations across sliding windows
+        Measurement: Proportion of adjacent windows with same recommendation
+        """
+        all_consistency_scores = []
+        match_level_consistency = []
+        
+        for match in match_recommendations:
+            windows = match['window_recommendations']
+            
+            if len(windows) < 2:
+                continue
+            
+            # Extract primary recommendations for each window
+            primary_recs = []
+            for window in windows:
+                if window['recommendations']:
+                    primary_recs.append(window['summary']['primary_focus'])
+                else:
+                    primary_recs.append(None)
+            
+            # Calculate adjacent window consistency
+            consistent_transitions = 0
+            total_transitions = 0
+            
+            for i in range(len(primary_recs) - 1):
+                if primary_recs[i] is not None and primary_recs[i+1] is not None:
+                    total_transitions += 1
+                    if primary_recs[i] == primary_recs[i+1]:
+                        consistent_transitions += 1
+            
+            if total_transitions > 0:
+                match_consistency = consistent_transitions / total_transitions
+                match_level_consistency.append(match_consistency)
+                
+                # Also collect window-level consistency scores
+                for window in windows:
+                    all_consistency_scores.append(window['temporal_consistency'])
+        
+        # Calculate overall statistics
+        if match_level_consistency:
+            return {
+                'overall_consistency': {
+                    'mean': round(np.mean(match_level_consistency), 3),
+                    'median': round(np.median(match_level_consistency), 3),
+                    'std': round(np.std(match_level_consistency), 3),
+                    'min': round(np.min(match_level_consistency), 3),
+                    'max': round(np.max(match_level_consistency), 3)
+                },
+                'window_level_consistency': {
+                    'mean': round(np.mean(all_consistency_scores), 3),
+                    'std': round(np.std(all_consistency_scores), 3)
+                },
+                'interpretation': {
+                    'high_consistency_threshold': 0.7,
+                    'matches_with_high_consistency': sum(1 for c in match_level_consistency if c > 0.7),
+                    'matches_with_low_consistency': sum(1 for c in match_level_consistency if c < 0.3)
+                },
+                'measurement': 'Proportion of adjacent windows with same primary recommendation'
+            }
+        else:
+            return {
+                'overall_consistency': {'mean': 0, 'median': 0, 'std': 0, 'min': 0, 'max': 0},
+                'window_level_consistency': {'mean': 0, 'std': 0},
+                'interpretation': {
+                    'high_consistency_threshold': 0.7,
+                    'matches_with_high_consistency': 0,
+                    'matches_with_low_consistency': 0
+                },
+                'measurement': 'Proportion of adjacent windows with same primary recommendation'
+            }
+
+
+    def _calculate_coverage_metrics(self, all_windows: list) -> dict:
+        """Calculate coverage metrics for recommendation system."""
+        windows_with_recs = sum(1 for w in all_windows if w['recommendations'])
+        total_recs = sum(len(w['recommendations']) for w in all_windows)
+        
+        return {
+            'total_windows': len(all_windows),
+            'windows_with_recommendations': windows_with_recs,
+            'windows_without_recommendations': len(all_windows) - windows_with_recs,
+            'coverage_percentage': round(windows_with_recs / len(all_windows) * 100, 1) if all_windows else 0,
+            'total_recommendations': total_recs,
+            'avg_recommendations_per_window': round(total_recs / len(all_windows), 2) if all_windows else 0
+        }
+
+
+    def _create_recommendation_report(self, recommender, match_recs, rq2_metrics) -> str:
+        """Create comprehensive recommendation report with RQ2 metrics."""
         
         report_lines = [
+            "=" * 70,
             "TACTICAL RECOMMENDATION SYSTEM REPORT",
-            "=" * 50,
+            "=" * 70,
             "",
             "SYSTEM OVERVIEW:",
             f"- Total Rules: {len(recommender.rule_engine.rules)}",
             f"- Threshold Metrics: {len(recommender.threshold_analyzer.thresholds)}",
-            f"- Match Analyses: {len(match_recs)}"
+            f"- Match Analyses: {len(match_recs)}",
+            f"- Total Windows: {rq2_metrics['total_windows_analyzed']}",
+            "",
+            "=" * 70,
+            "4.2.3.1 RULE ACTIVATION METRICS",
+            "=" * 70,
+            ""
         ]
+        
+        # Rule activation metrics
+        activation = rq2_metrics['rule_activation_metrics']
+        
+        report_lines.extend([
+            "TRIGGER FREQUENCY:",
+            f"- Total rule activations: {activation['total_triggers']}"
+        ])
+        
+        for rule_type, count in activation['trigger_frequency'].items():
+            pct = count / activation['total_triggers'] * 100 if activation['total_triggers'] > 0 else 0
+            report_lines.append(f"  * {rule_type}: {count} ({pct:.1f}%)")
+        
+        report_lines.extend([
+            "",
+            "CONTEXT SPECIFICITY:",
+            "(Higher scores indicate rules are more context-specific)"
+        ])
+        
+        for rule_type, spec_data in activation['context_specificity'].items():
+            report_lines.append(
+                f"  * {rule_type}: {spec_data['specificity_score']} "
+                f"({spec_data['contexts_activated']} contexts)"
+            )
+        
+        report_lines.extend([
+            "",
+            "COVERAGE:",
+            f"- Windows with recommendations: {activation['coverage']['windows_with_recommendations']}/{activation['coverage']['total_windows']}",
+            f"- Coverage proportion: {activation['coverage']['coverage_proportion']:.3f}",
+            "",
+            "DIVERSITY:",
+            f"- Unique recommendation types: {activation['diversity']['unique_recommendation_types']}",
+            f"- Total recommendations: {activation['diversity']['total_recommendations']}",
+            f"- Diversity ratio: {activation['diversity']['diversity_ratio']:.3f}",
+            "",
+            "=" * 70,
+            "4.2.3.2 CONFIDENCE SCORING",
+            "=" * 70,
+            "",
+            "FORMULA:",
+            "Confidence = base_confidence + context_effect + temporal_boost",
+            "",
+            "COMPONENTS:"
+        ])
+        
+        # Confidence metrics
+        confidence = rq2_metrics['confidence_metrics']
+        
+        report_lines.extend([
+            "  * Urgency Factor Distribution:"
+        ])
+        for level, count in confidence['component_contributions']['urgency_factor'].items():
+            report_lines.append(f"    - {level}: {count}")
+        
+        report_lines.extend([
+            f"  * Context Weight (mean): {confidence['component_contributions']['context_weight']['mean']}",
+            f"  * Temporal Consistency (mean): {confidence['component_contributions']['temporal_consistency']['mean']}",
+            "",
+            "CONFIDENCE DISTRIBUTION:",
+            f"- Mean: {confidence['confidence_distribution']['mean']:.3f}",
+            f"- Median: {confidence['confidence_distribution']['median']:.3f}",
+            f"- Std: {confidence['confidence_distribution']['std']:.3f}",
+            f"- Range: [{confidence['confidence_distribution']['min']:.3f}, {confidence['confidence_distribution']['max']:.3f}]",
+            "",
+            "CONFIDENCE LEVELS:",
+            f"- Very High (≥0.8): {confidence['confidence_levels']['very_high']}",
+            f"- High (0.6-0.8): {confidence['confidence_levels']['high']}",
+            f"- Medium (0.4-0.6): {confidence['confidence_levels']['medium']}",
+            f"- Low (<0.4): {confidence['confidence_levels']['low']}",
+            "",
+            "FILTERING EFFECTIVENESS:",
+            f"- Total recommendations: {confidence['filtering_effectiveness']['total_recommendations']}",
+            f"- Filtered windows: {confidence['filtering_effectiveness']['filtered_windows']}",
+            f"- Filter rate: {confidence['filtering_effectiveness']['filter_rate']:.3f}",
+            "",
+            "=" * 70,
+            "4.2.3.3 TEMPORAL CONSISTENCY",
+            "=" * 70,
+            "",
+            "DEFINITION:",
+            "Stability of recommendations across sliding windows",
+            "",
+            "MEASUREMENT:",
+            confidence['temporal_consistency_metrics']['measurement'] if 'temporal_consistency_metrics' in confidence else rq2_metrics['temporal_consistency_metrics']['measurement'],
+            ""
+        ])
+        
+        # Temporal consistency metrics
+        temporal = rq2_metrics['temporal_consistency_metrics']
+        
+        report_lines.extend([
+            "OVERALL CONSISTENCY:",
+            f"- Mean: {temporal['overall_consistency']['mean']:.3f}",
+            f"- Median: {temporal['overall_consistency']['median']:.3f}",
+            f"- Std: {temporal['overall_consistency']['std']:.3f}",
+            f"- Range: [{temporal['overall_consistency']['min']:.3f}, {temporal['overall_consistency']['max']:.3f}]",
+            "",
+            "INTERPRETATION:",
+            f"- High consistency threshold: {temporal['interpretation']['high_consistency_threshold']}",
+            f"- Matches with high consistency: {temporal['interpretation']['matches_with_high_consistency']}",
+            f"- Matches with low consistency: {temporal['interpretation']['matches_with_low_consistency']}",
+            "",
+            "=" * 70,
+            "MATCH ANALYSIS SUMMARY",
+            "=" * 70,
+            ""
+        ])
         
         # Add match analysis summary
         if match_recs:
-            report_lines.extend([
-                "",
-                "MATCH ANALYSIS SUMMARY:",
-            ])
-            
             total_critical_periods = sum(
                 len(match['match_analysis']['critical_periods']) 
                 for match in match_recs
@@ -334,23 +745,40 @@ class MainAnalysis:
                 for rec_type, count in common_recs:
                     report_lines.append(f"  * {rec_type}: {count} instances")
         
+        report_lines.extend([
+            "",
+            "=" * 70,
+            "END OF REPORT",
+            "=" * 70
+        ])
+        
         return "\n".join(report_lines)
 
+
     def _save_rq2_results(self, rq2_results: dict):
-        """Save RQ2 results to files"""
-        # save into the same centralized results_dir
+        """Save RQ2 results to files including comprehensive metrics."""
         self.results_dir.mkdir(parents=True, exist_ok=True)
 
+        # Save recommendation report
         report_path = self.results_dir / "rq2_recommendation_report.txt"
         with open(report_path, 'w') as f:
             f.write(rq2_results['recommendation_report'])
 
+        # Save system summary
         summary_path = self.results_dir / "rq2_system_summary.json"
         with open(summary_path, 'w') as f:
             json.dump(rq2_results['system_summary'], f, indent=2)
+        
+        # Save comprehensive RQ2 metrics
+        metrics_path = self.results_dir / "rq2_metrics.json"
+        with open(metrics_path, 'w') as f:
+            json.dump(rq2_results['rq2_metrics'], f, indent=2)
 
         print(f"RQ2 results saved to {self.results_dir}")
-    
+        print(f"  - Report: {report_path}")
+        print(f"  - Summary: {summary_path}")
+        print(f"  - Metrics: {metrics_path}")
+
     def run_rq3_analysis(self, save_results: bool = True) -> Dict:
         """Run RQ3: Recommendation Validation"""
         

@@ -1,6 +1,5 @@
 from tactical_analysis_system.main_analysis import MainAnalysis
 from tactical_analysis_system.data_loader import DataLoader
-from tactical_analysis_system.visualizer import RQ1Visualizer
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
@@ -216,7 +215,7 @@ if __name__ == "__main__":
     analysis = MainAnalysis(use_saved_data=True, data_file=data_file, window_size=window_size)
 
     print("1. Running RQ1 Analysis")
-    rq1_results = analysis.run_rq1_analysis(max_matches=100, save_results=True, filepath=data_file)
+    rq1_results = analysis.run_rq1_analysis(max_matches=10, save_results=True, filepath=data_file)
     print("RQ1 Done")
 
     print("\n2. Running RQ2 Analysis")
