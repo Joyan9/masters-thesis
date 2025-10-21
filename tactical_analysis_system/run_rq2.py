@@ -3,6 +3,9 @@ from tactical_analysis_system.data_loader import DataLoader
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use("Agg")    # headless backend
+plt.close('all')
 import seaborn as sns
 import numpy as np
 
@@ -210,12 +213,15 @@ def plot_match_level_summary(flat_recs, output_dir="results/plots/rq2"):
     plt.close()
 
 if __name__ == "__main__":
-    window_size = 10
     data_file = "statsbomb_data_interim_100.json"
-    analysis = MainAnalysis(use_saved_data=True, data_file=data_file, window_size=window_size)
+    window_size = 10
+    step_size = 5
+    print(f"\n=== Running analysis for window size: {window_size} minutes ===")
+    analysis = MainAnalysis(use_saved_data=True, data_file=data_file, 
+                            window_size=window_size, step_size=step_size)
 
     print("1. Running RQ1 Analysis")
-    rq1_results = analysis.run_rq1_analysis(max_matches=10, save_results=True, filepath=data_file)
+    rq1_results = analysis.run_rq1_analysis(max_matches=100, save_results=True, filepath=data_file)
     print("RQ1 Done")
 
     print("\n2. Running RQ2 Analysis")

@@ -231,8 +231,11 @@ if __name__ == "__main__":
     import pandas as pd
     
     window_size = 10
-    data_file = "statsbomb_data_interim_100.json"
-    analysis = MainAnalysis(use_saved_data=True, data_file=data_file, window_size=window_size)
+    step_size = 5
+    analysis = MainAnalysis(use_saved_data=True, data_file=data_file, 
+                            window_size=window_size, step_size=step_size)
+
+    
 
     print("Running RQ1 Analysis...")
     rq1_results = analysis.run_rq1_analysis(max_matches=100, save_results=True, filepath=data_file)

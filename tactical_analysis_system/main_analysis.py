@@ -1,5 +1,6 @@
 import json
 import pandas as pd
+import numpy as np
 from typing import Dict, List, Tuple, Any, Optional
 from pathlib import Path
 from .data_loader import DataLoader
@@ -276,7 +277,31 @@ class MainAnalysis:
 
         return rq2_results
 
-
+    def _generate_match_recommendations(self, recommender) -> list:
+        """Generate recommendations for each match"""
+        
+        # Get unique matches from the dataset
+        if 'match_id' in self.results['network_metrics'].columns:
+            unique_matches = self.results['network_metrics']['match_id'].unique()
+            
+            match_recommendations = []
+            
+            for match_id in unique_matches:
+                print(f"   Analyzing match: {match_id}")
+                
+                match_data = self.results['network_metrics'][
+                    self.results['network_metrics']['match_id'] == match_id
+                ]
+                
+                match_analysis = recommender.analyze_match_recommendations(
+                    match_data, str(match_id)
+                )
+                
+                match_recommendations.append(match_analysis)
+            
+            return match_recommendations
+        
+        return []
     def _calculate_rq2_metrics(self, recommender, match_recommendations: list) -> dict:
         """
         Calculate comprehensive RQ2 metrics as specified in thesis report.

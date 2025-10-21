@@ -178,7 +178,7 @@ class NetworkAnalyzer:
         try:
             eigenvector = nx.eigenvector_centrality(G_inverted, weight='weight', max_iter=1000)
         except nx.PowerIterationFailedConvergence as e:
-            logger.warning(f"Eigenvector centrality failed to converge: {e}. Using zeros.")
+            #logger.warning(f"Eigenvector centrality failed to converge: {e}. Using zeros.")
             eigenvector = {node: 0 for node in G.nodes()}
         except Exception as e:
             logger.error(f"Unexpected error in eigenvector centrality: {e}. Using zeros.")

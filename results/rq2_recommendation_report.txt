@@ -1,14 +1,106 @@
+======================================================================
 TACTICAL RECOMMENDATION SYSTEM REPORT
-==================================================
+======================================================================
 
 SYSTEM OVERVIEW:
 - Total Rules: 8
 - Threshold Metrics: 6
-- Match Analyses: 5
+- Match Analyses: 100
+- Total Windows: 3319
 
-MATCH ANALYSIS SUMMARY:
-- Total critical periods identified: 50
+======================================================================
+4.2.3.1 RULE ACTIVATION METRICS
+======================================================================
+
+TRIGGER FREQUENCY:
+- Total rule activations: 1659
+  * attacking: 934 (56.3%)
+  * possession: 462 (27.8%)
+  * spatial: 160 (9.6%)
+  * defensive: 60 (3.6%)
+  * tempo: 43 (2.6%)
+
+CONTEXT SPECIFICITY:
+(Higher scores indicate rules are more context-specific)
+  * attacking: 0.098 (12 contexts)
+  * spatial: 0.082 (9 contexts)
+  * possession: 0.144 (12 contexts)
+  * tempo: 0.104 (9 contexts)
+  * defensive: 0.05 (3 contexts)
+
+COVERAGE:
+- Windows with recommendations: 1406/3319
+- Coverage proportion: 0.424
+
+DIVERSITY:
+- Unique recommendation types: 5
+- Total recommendations: 1659
+- Diversity ratio: 0.003
+
+======================================================================
+4.2.3.2 CONFIDENCE SCORING
+======================================================================
+
+FORMULA:
+Confidence = base_confidence + context_effect + temporal_boost
+
+COMPONENTS:
+  * Urgency Factor Distribution:
+    - very_high: 250
+    - high: 305
+    - medium: 538
+    - normal: 566
+  * Context Weight (mean): 0.997
+  * Temporal Consistency (mean): 0.844
+
+CONFIDENCE DISTRIBUTION:
+- Mean: 0.961
+- Median: 0.980
+- Std: 0.044
+- Range: [0.818, 0.980]
+
+CONFIDENCE LEVELS:
+- Very High (≥0.8): 1659
+- High (0.6-0.8): 0
+- Medium (0.4-0.6): 0
+- Low (<0.4): 0
+
+FILTERING EFFECTIVENESS:
+- Total recommendations: 1659
+- Filtered windows: 1913
+- Filter rate: 0.576
+
+======================================================================
+4.2.3.3 TEMPORAL CONSISTENCY
+======================================================================
+
+DEFINITION:
+Stability of recommendations across sliding windows
+
+MEASUREMENT:
+Proportion of adjacent windows with same primary recommendation
+
+OVERALL CONSISTENCY:
+- Mean: 0.315
+- Median: 0.333
+- Std: 0.236
+- Range: [0.000, 1.000]
+
+INTERPRETATION:
+- High consistency threshold: 0.7
+- Matches with high consistency: 6
+- Matches with low consistency: 39
+
+======================================================================
+MATCH ANALYSIS SUMMARY
+======================================================================
+
+- Total critical periods identified: 1091
 - Most common recommendation types:
-  * none: 75 instances
-  * attacking: 49 instances
-  * possession: 32 instances
+  * none: 1913 instances
+  * attacking: 727 instances
+  * possession: 400 instances
+
+======================================================================
+END OF REPORT
+======================================================================

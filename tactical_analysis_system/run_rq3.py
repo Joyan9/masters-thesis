@@ -171,7 +171,7 @@ if __name__ == "__main__":
         
         # Run analyses and create visualizations for each RQ
         print("\n1. Running RQ1 Analysis...")
-        rq1_results = analysis.run_rq1_analysis(max_matches=100, save_results=True, filepath=data_file)
+        rq1_results = analysis.run_rq1_analysis(max_matches=80, save_results=True, filepath=data_file)
 
         print("\n2. Running RQ2 Analysis...")
         rq2_results = analysis.run_rq2_analysis(save_results=True)
