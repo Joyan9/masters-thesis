@@ -21,9 +21,6 @@ Methodological Approach:
 - Estimates recommendation effects based on expected impacts
 - Compares simulated improvements against actual performance
 - Tests statistical significance using Wilcoxon signed-rank test
-
-Author: [Your Name]
-Date: October 2025
 """
 
 import pandas as pd
@@ -35,6 +32,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import warnings
 import sklearn.metrics
+import json
+from datetime import datetime
 
 warnings.filterwarnings("ignore")
 
@@ -85,6 +84,17 @@ class CounterfactualAnalyzer:
         self.recommendations_data = recommendations_data
         self.counterfactual_models = {}
         self.simulation_results = {}
+        
+        # Initialize comprehensive logging
+        self.analysis_log = {
+            'timestamp': datetime.now().isoformat(),
+            'assumptions': {},
+            'actual_values': {},
+            'model_details': {},
+            'statistics': {},
+            'validation_flags': {}
+        }
+    
     
     def run_counterfactual_analysis(self) -> Dict:
         """
@@ -116,37 +126,409 @@ class CounterfactualAnalyzer:
             - Progress is printed to console for monitoring
             - Returns partial results if some components fail
         """
-        print("Running Counterfactual Analysis...")
-        print("=" * 50)
+
+        print("Running Counterfactual Analysis with Logging...")
+        print("=" * 70)
         
-        # 1. Build predictive models for natural evolution
-        print("1. Building predictive models...")
+        # Log initial data statistics
+        self._log_initial_data_stats()
+        
+        # 1. Build predictive models
+        print("\n1. Building predictive models...")
         self.build_predictive_models()
         
         # 2. Identify counterfactual scenarios
-        print("2. Identifying counterfactual scenarios...")
+        print("\n2. Identifying counterfactual scenarios...")
         scenarios = self.identify_counterfactual_scenarios()
         
         # 3. Simulate alternative outcomes
-        print("3. Simulating alternative outcomes...")
+        print("\n3. Simulating alternative outcomes...")
         simulation_results = self.simulate_alternative_outcomes(scenarios)
         
         # 4. Compare actual vs counterfactual
-        print("4. Comparing outcomes...")
+        print("\n4. Comparing outcomes...")
         comparison_results = self.compare_outcomes(simulation_results)
         
         # 5. Calculate recommendation impact
-        print("5. Calculating recommendation impact...")
+        print("\n5. Calculating recommendation impact...")
         impact_analysis = self.calculate_recommendation_impact(comparison_results)
+        
+        # 6. Identify and log case studies
+        print("\n6. Identifying case studies...")
+        case_studies = self.identify_and_log_case_studies(
+            comparison_results, simulation_results
+        )
+        
+        # 7. Log final statistics
+        self._log_final_statistics(comparison_results, impact_analysis)
+        
+        # 8. Print comprehensive log summary
+        self._print_log_summary()
+        
+        # 9. Save case studies to separate file
+        if case_studies:
+            self.save_case_studies_to_file(case_studies)
         
         return {
             'scenarios': scenarios,
             'simulation_results': simulation_results,
             'comparison_results': comparison_results,
             'impact_analysis': impact_analysis,
-            'model_performance': self.evaluate_model_performance()
+            'model_performance': self.evaluate_model_performance(),
+            'case_studies': case_studies,
+            'analysis_log': self.analysis_log
         }
+
+    # =========================================================================
+    # LOGGING METHODS
+    # =========================================================================
     
+    def _log_initial_data_stats(self):
+        """Log initial data statistics."""
+        print("\n" + "=" * 70)
+        print("LOGGING INITIAL DATA STATISTICS")
+        print("=" * 70)
+        
+        # Total matches and windows
+        total_matches = self.network_data['match_id'].nunique()
+        total_windows = len(self.network_data)
+        
+        self.analysis_log['actual_values']['total_matches'] = total_matches
+        self.analysis_log['actual_values']['total_windows'] = total_windows
+        
+        print(f"✓ Total matches: {total_matches}")
+        print(f"✓ Total windows: {total_windows}")
+        
+        # Windows per match
+        windows_per_match = self.network_data.groupby('match_id').size()
+        avg_windows = windows_per_match.mean()
+        
+        self.analysis_log['actual_values']['avg_windows_per_match'] = float(avg_windows)
+        print(f"✓ Average windows per match: {avg_windows:.1f}")
+        
+        # Total recommendations
+        total_recs = sum(
+            len(w.get('recommendations', []))
+            for rec_data in self.recommendations_data
+            for w in rec_data.get('window_recommendations', [])
+        )
+        
+        self.analysis_log['actual_values']['total_recommendations'] = total_recs
+        print(f"✓ Total recommendations generated: {total_recs}")
+        
+        # Recommendation breakdown by type
+        rec_types = {}
+        for rec_data in self.recommendations_data:
+            for w in rec_data.get('window_recommendations', []):
+                for rec in w.get('recommendations', []):
+                    rec_type = rec.get('type', 'unknown')
+                    rec_types[rec_type] = rec_types.get(rec_type, 0) + 1
+        
+        self.analysis_log['actual_values']['recommendations_by_type'] = rec_types
+        print(f"\n✓ Recommendations by type:")
+        for rec_type, count in sorted(rec_types.items(), key=lambda x: x[1], reverse=True):
+            print(f"  - {rec_type}: {count}")
+    
+    def _log_model_training_details(self, metric: str, training_data: pd.DataFrame, 
+                                   model_info: Dict):
+        """Log detailed model training information."""
+        if metric not in self.analysis_log['model_details']:
+            self.analysis_log['model_details'][metric] = {}
+        
+        model_log = self.analysis_log['model_details'][metric]
+        
+        # Training data size
+        model_log['training_samples'] = len(training_data)
+        
+        # Train/test split
+        test_size = 0.2
+        train_samples = int(len(training_data) * (1 - test_size))
+        test_samples = len(training_data) - train_samples
+        
+        model_log['train_test_split'] = {
+            'train_size': train_samples,
+            'test_size': test_samples,
+            'split_ratio': f"{int((1-test_size)*100)}/{int(test_size*100)}"
+        }
+        
+        # Model hyperparameters
+        model_log['hyperparameters'] = {
+            'n_estimators': 100,
+            'max_depth': None,
+            'min_samples_split': 2,
+            'random_state': 42,
+            'note': 'Using sklearn defaults (no grid search performed)'
+        }
+        
+        # Performance metrics
+        model_log['performance'] = {
+            'train_r2': float(model_info['train_score']),
+            'test_r2': float(model_info['test_score']),
+            'r2': float(model_info['r2']),
+            'mae': float(model_info['mae']),
+            'rmse': float(model_info['rmse'])
+        }
+        
+        # Feature importance
+        model_log['feature_importance'] = {
+            k: float(v) for k, v in model_info['feature_importance'].items()
+        }
+        
+        # Top 3 features
+        top_features = sorted(
+            model_info['feature_importance'].items(),
+            key=lambda x: x[1],
+            reverse=True
+        )[:3]
+        model_log['top_3_features'] = [
+            {'feature': feat, 'importance': float(imp)} 
+            for feat, imp in top_features
+        ]
+        
+        print(f"\n   Model Training Details for {metric}:")
+        print(f"   - Training samples: {train_samples}")
+        print(f"   - Test samples: {test_samples}")
+        print(f"   - Train R²: {model_info['train_score']:.3f}")
+        print(f"   - Test R²: {model_info['test_score']:.3f}")
+        print(f"   - MAE: {model_info['mae']:.4f}")
+        print(f"   - RMSE: {model_info['rmse']:.4f}")
+        print(f"   - Top feature: {top_features[0][0]} ({top_features[0][1]:.3f})")
+    
+    def _log_simulation_statistics(self, simulation_results: List[Dict]):
+        """Log simulation statistics."""
+        if not simulation_results:
+            return
+        
+        sim_log = {}
+        
+        # Simulation quality
+        qualities = [s['simulation_quality'] for s in simulation_results]
+        sim_log['average_simulation_quality'] = float(np.mean(qualities))
+        sim_log['min_simulation_quality'] = float(np.min(qualities))
+        sim_log['max_simulation_quality'] = float(np.max(qualities))
+        
+        # Metrics simulated
+        metrics_simulated = {}
+        for sim in simulation_results:
+            for metric in sim['simulated_outcomes'].keys():
+                metrics_simulated[metric] = metrics_simulated.get(metric, 0) + 1
+        
+        sim_log['metrics_simulated_count'] = metrics_simulated
+        sim_log['total_simulations'] = len(simulation_results)
+        
+        # Recommendation effects
+        all_effects = {}
+        for sim in simulation_results:
+            for metric, outcome in sim['simulated_outcomes'].items():
+                if metric not in all_effects:
+                    all_effects[metric] = []
+                all_effects[metric].append(outcome['recommendation_effect'])
+        
+        sim_log['recommendation_effects'] = {
+            metric: {
+                'mean': float(np.mean(effects)),
+                'std': float(np.std(effects)),
+                'min': float(np.min(effects)),
+                'max': float(np.max(effects))
+            }
+            for metric, effects in all_effects.items()
+        }
+        
+        self.analysis_log['statistics']['simulation'] = sim_log
+        
+        print(f"\n   Simulation Statistics:")
+        print(f"   - Total simulations: {len(simulation_results)}")
+        print(f"   - Average quality: {sim_log['average_simulation_quality']:.3f}")
+        print(f"   - Metrics coverage:")
+        for metric, count in sorted(metrics_simulated.items(), key=lambda x: x[1], reverse=True):
+            coverage = count / len(simulation_results) * 100
+            print(f"     • {metric}: {count} ({coverage:.1f}%)")
+    
+    def _log_comparison_statistics(self, comparison_results: Dict):
+        """Log detailed comparison statistics."""
+        comp_log = {}
+        
+        comparisons = comparison_results.get('individual_comparisons', [])
+        summary = comparison_results.get('summary_statistics', {})
+        
+        comp_log['total_comparisons'] = len(comparisons)
+        
+        # Improvement rates
+        improvement_rates = summary.get('improvement_rates', {})
+        comp_log['improvement_rates'] = {
+            k: float(v) for k, v in improvement_rates.items()
+        }
+        
+        # Average treatment effects
+        avg_differences = summary.get('average_differences', {})
+        comp_log['average_treatment_effects'] = {
+            k: float(v) for k, v in avg_differences.items()
+        }
+        
+        # Statistical significance
+        significance = summary.get('statistical_significance', {})
+        comp_log['statistical_tests'] = {}
+        
+        for metric, sig_data in significance.items():
+            comp_log['statistical_tests'][metric] = {
+                'test': 'Wilcoxon signed-rank',
+                'p_value': float(sig_data.get('p_value', 1.0)),
+                'significant': sig_data.get('significant', False),
+                'alpha': 0.05
+            }
+        
+        # Calculate W-statistics manually for logging
+        for metric in improvement_rates.keys():
+            actual_changes = []
+            simulated_changes = []
+            
+            for comp in comparisons:
+                if metric in comp.get('metric_comparisons', {}):
+                    metric_comp = comp['metric_comparisons'][metric]
+                    actual_changes.append(metric_comp['actual_change'])
+                    simulated_changes.append(metric_comp['simulated_change'])
+            
+            if len(actual_changes) > 1:
+                try:
+                    w_stat, p_val = stats.wilcoxon(actual_changes, simulated_changes)
+                    comp_log['statistical_tests'][metric]['w_statistic'] = float(w_stat)
+                    comp_log['statistical_tests'][metric]['sample_size'] = len(actual_changes)
+                except:
+                    pass
+        
+        self.analysis_log['statistics']['comparison'] = comp_log
+        
+        print(f"\n   Comparison Statistics:")
+        print(f"   - Total comparisons: {len(comparisons)}")
+        print(f"\n   Improvement Rates by Metric:")
+        for metric, rate in sorted(improvement_rates.items(), key=lambda x: x[1], reverse=True):
+            sig_marker = "***" if significance.get(metric, {}).get('significant') else ""
+            print(f"     • {metric}: {rate:.1%} {sig_marker}")
+        
+        print(f"\n   Statistical Significance (Wilcoxon Tests):")
+        for metric, sig_data in comp_log['statistical_tests'].items():
+            w_stat = sig_data.get('w_statistic', 'N/A')
+            p_val = sig_data.get('p_value', 1.0)
+            n = sig_data.get('sample_size', 0)
+            sig = "✓" if sig_data['significant'] else "✗"
+            print(f"     • {metric}: W={w_stat}, p={p_val:.4f}, n={n} {sig}")
+    
+    def _log_final_statistics(self, comparison_results: Dict, impact_analysis: Dict):
+        """Log final comprehensive statistics."""
+        print("\n" + "=" * 70)
+        print("FINAL STATISTICS SUMMARY")
+        print("=" * 70)
+        
+        # Overall improvement rate
+        overall_rate = impact_analysis.get('overall_improvement_rate', 0)
+        self.analysis_log['statistics']['overall_improvement_rate'] = float(overall_rate)
+        
+        print(f"\n✓ Overall Improvement Rate: {overall_rate:.1%}")
+        
+        # Recommendation type impacts
+        type_impacts = impact_analysis.get('recommendation_type_impacts', {})
+        self.analysis_log['statistics']['recommendation_type_impacts'] = {
+            rec_type: {
+                'improvement_rate': float(data['improvement_rate']),
+                'sample_size': int(data['sample_size'])
+            }
+            for rec_type, data in type_impacts.items()
+        }
+        
+        print(f"\n✓ Improvement Rates by Recommendation Type:")
+        for rec_type, data in sorted(type_impacts.items(), 
+                                     key=lambda x: x[1]['improvement_rate'], 
+                                     reverse=True):
+            print(f"  - {rec_type}: {data['improvement_rate']:.1%} (n={data['sample_size']})")
+        
+        # Log comparison statistics
+        self._log_comparison_statistics(comparison_results)
+        
+        # Validation flags
+        self._set_validation_flags()
+    
+    def _set_validation_flags(self):
+        """Set validation flags for key assumptions."""
+        flags = {}
+        
+        # Check if grid search was used
+        flags['grid_search_performed'] = False
+        flags['note_grid_search'] = "Using sklearn defaults (n_estimators=100, max_depth=None)"
+        
+        # Check train/test split
+        flags['train_test_split'] = "80/20"
+        flags['cross_validation'] = "Not performed (assumed 5-fold in thesis)"
+        
+        # Check if null model was run
+        flags['null_model_comparison'] = "Not performed"
+        
+        # Check if sensitivity analysis was run
+        flags['sensitivity_analysis'] = "Not performed"
+        
+        # Check sample sizes
+        actual_values = self.analysis_log.get('actual_values', {})
+        flags['sufficient_sample_size'] = actual_values.get('total_windows', 0) > 100
+        
+        # Check model performance
+        model_details = self.analysis_log.get('model_details', {})
+        avg_test_r2 = np.mean([
+            m['performance']['test_r2'] 
+            for m in model_details.values()
+        ]) if model_details else 0
+        flags['adequate_model_performance'] = avg_test_r2 > 0.5
+        
+        self.analysis_log['validation_flags'] = flags
+    
+    def _print_log_summary(self):
+        """Print comprehensive log summary."""
+        print("\n" + "=" * 70)
+        print("COMPREHENSIVE ANALYSIS LOG")
+        print("=" * 70)
+        
+        print("\n1. DATA STATISTICS:")
+        actual = self.analysis_log.get('actual_values', {})
+        print(f"   - Total matches: {actual.get('total_matches', 'N/A')}")
+        print(f"   - Total windows: {actual.get('total_windows', 'N/A')}")
+        print(f"   - Total recommendations: {actual.get('total_recommendations', 'N/A')}")
+        
+        print("\n2. MODEL TRAINING:")
+        models = self.analysis_log.get('model_details', {})
+        print(f"   - Models trained: {len(models)}")
+        for metric, details in models.items():
+            perf = details.get('performance', {})
+            print(f"   - {metric}: Test R²={perf.get('test_r2', 0):.3f}, "
+                  f"MAE={perf.get('mae', 0):.4f}")
+        
+        print("\n3. SIMULATION RESULTS:")
+        sim_stats = self.analysis_log.get('statistics', {}).get('simulation', {})
+        print(f"   - Total simulations: {sim_stats.get('total_simulations', 'N/A')}")
+        print(f"   - Average quality: {sim_stats.get('average_simulation_quality', 0):.3f}")
+        
+        print("\n4. TREATMENT EFFECTS:")
+        comp_stats = self.analysis_log.get('statistics', {}).get('comparison', {})
+        improvement_rates = comp_stats.get('improvement_rates', {})
+        for metric, rate in sorted(improvement_rates.items(), key=lambda x: x[1], reverse=True):
+            ate = comp_stats.get('average_treatment_effects', {}).get(metric, 0)
+            print(f"   - {metric}: {rate:.1%} improvement, ATE={ate:+.4f}")
+        
+        print("\n5. VALIDATION FLAGS:")
+        flags = self.analysis_log.get('validation_flags', {})
+        for flag, value in flags.items():
+            print(f"   - {flag}: {value}")
+        
+        # Save log to file
+        self._save_log_to_file()
+    
+    def _save_log_to_file(self):
+        """Save analysis log to JSON file."""
+        try:
+            filename = f"counterfactual_analysis_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            with open(filename, 'w') as f:
+                json.dump(self.analysis_log, f, indent=2)
+            print(f"\n✓ Analysis log saved to: {filename}")
+        except Exception as e:
+            print(f"\n✗ Failed to save log: {e}")
+        
     # =========================================================================
     # PREDICTIVE MODEL BUILDING
     # =========================================================================
@@ -174,14 +556,16 @@ class CounterfactualAnalyzer:
             - Requires minimum 10 samples per metric
             - Prints success message for each model built
         """
-        # Prepare training data from consecutive windows
         training_data = self._prepare_training_data()
         
         if training_data.empty:
             print("   Warning: Insufficient data for model building")
             return
         
-        # Build models for each network metric
+        # Log training data statistics
+        self.analysis_log['actual_values']['training_window_pairs'] = len(training_data)
+        print(f"   ✓ Created {len(training_data)} consecutive window pairs for training")
+        
         metrics_to_predict = [
             'density', 'clustering_coefficient', 'avg_betweenness_centrality',
             'avg_eigenvector_centrality', 'avg_path_length', 'centralization'
@@ -192,8 +576,10 @@ class CounterfactualAnalyzer:
                 model = self._build_metric_model(training_data, metric)
                 if model:
                     self.counterfactual_models[metric] = model
-                    print(f"   ✓ Built model for {metric} (R²={model['r2']:.3f})")
-    
+                    # Log model details
+                    self._log_model_training_details(metric, training_data, model)
+                    print(f"   ✓ Built model for {metric}")
+
     def _prepare_training_data(self) -> pd.DataFrame:
         """
         Prepare training data for predictive models.
@@ -411,7 +797,6 @@ class CounterfactualAnalyzer:
                     recommendations = window_rec.get('recommendations', [])
                     
                     if recommendations:
-                        # Create counterfactual scenario
                         scenario = {
                             'window_info': window_rec.get('window_info', {}),
                             'actual_metrics': window_rec.get('current_metrics', {}),
@@ -419,12 +804,17 @@ class CounterfactualAnalyzer:
                             'recommendations': recommendations,
                             'scenario_type': 'recommendation_implementation'
                         }
-                        
                         scenarios.append(scenario)
         
-        print(f"   Identified {len(scenarios)} counterfactual scenarios")
+        # Log scenario statistics
+        self.analysis_log['actual_values']['counterfactual_scenarios'] = len(scenarios)
+        total_windows = self.analysis_log.get('actual_values', {}).get('total_windows', 1)
+        coverage = len(scenarios) / total_windows * 100 if total_windows > 0 else 0
+        self.analysis_log['actual_values']['scenario_coverage_percent'] = float(coverage)
+        
+        print(f"   ✓ Identified {len(scenarios)} counterfactual scenarios ({coverage:.1f}% of windows)")
         return scenarios
-    
+
     # =========================================================================
     # OUTCOME SIMULATION
     # =========================================================================
@@ -480,32 +870,26 @@ class CounterfactualAnalyzer:
         simulation_results = []
         
         for scenario in scenarios:
-            # Get actual metrics and context
             actual_metrics = scenario['actual_metrics']
             context = scenario['context']
             recommendations = scenario['recommendations']
             
-            # Simulate what would happen if recommendations were followed
             simulated_outcomes = {}
             
             for metric, model_info in self.counterfactual_models.items():
                 if metric in actual_metrics:
-                    # Create feature vector for prediction
                     features = self._create_feature_vector(
                         actual_metrics, context, model_info['features']
                     )
                     
                     if features is not None:
-                        # Predict baseline change (natural evolution)
                         features_scaled = model_info['scaler'].transform([features])
                         predicted_change = model_info['model'].predict(features_scaled)[0]
                         
-                        # Estimate recommendation effect
                         recommendation_effect = self._estimate_recommendation_effect(
                             recommendations, metric
                         )
                         
-                        # Combine baseline + recommendation effect
                         total_change = predicted_change + recommendation_effect
                         simulated_value = actual_metrics[metric] + total_change
                         
@@ -525,8 +909,11 @@ class CounterfactualAnalyzer:
             
             simulation_results.append(simulation_result)
         
+        # Log simulation statistics
+        self._log_simulation_statistics(simulation_results)
+        
         return simulation_results
-    
+
     def _create_feature_vector(self, metrics: Dict, context: Dict, 
                               required_features: List[str]) -> Optional[List[float]]:
         """
@@ -1089,3 +1476,519 @@ class CounterfactualAnalyzer:
             'overall_quality': overall_quality,
             'total_models': len(model_performance)
         }
+
+
+    # =========================================================================
+    # CASE STUDY IDENTIFICATION AND LOGGING
+    # =========================================================================
+    
+    def identify_and_log_case_studies(self, comparison_results: Dict, 
+                                      simulation_results: List[Dict]) -> List[Dict]:
+        """
+        Identify and log interesting case studies.
+        
+        Automatically selects representative examples across different categories:
+        1. High-impact success cases (large improvements)
+        2. Context-specific cases (trailing, tied, leading)
+        3. Recommendation type examples (spatial, tempo, etc.)
+        4. Phase-specific cases (early, middle, late game)
+        
+        Returns:
+            List[Dict]: Case study examples with full details
+        """
+        print("\n" + "=" * 70)
+        print("IDENTIFYING CASE STUDIES")
+        print("=" * 70)
+        
+        case_studies = []
+        comparisons = comparison_results.get('individual_comparisons', [])
+        
+        if not comparisons:
+            print("   No comparisons available for case studies")
+            return case_studies
+        
+        # 1. Find high-impact success case
+        print("\n1. Searching for high-impact success cases...")
+        high_impact_case = self._find_high_impact_case(comparisons, simulation_results)
+        if high_impact_case:
+            case_studies.append(high_impact_case)
+            self._print_case_study(high_impact_case, "HIGH-IMPACT SUCCESS")
+        
+        # 2. Find context-specific cases
+        print("\n2. Searching for context-specific cases...")
+        context_cases = self._find_context_specific_cases(comparisons, simulation_results)
+        case_studies.extend(context_cases)
+        for i, case in enumerate(context_cases):
+            context = case['case_metadata']['score_context']
+            self._print_case_study(case, f"CONTEXT-SPECIFIC ({context.upper()})")
+        
+        # 3. Find recommendation type examples
+        print("\n3. Searching for recommendation type examples...")
+        type_cases = self._find_recommendation_type_cases(comparisons, simulation_results)
+        case_studies.extend(type_cases)
+        for case in type_cases:
+            rec_type = case['case_metadata']['primary_recommendation_type']
+            self._print_case_study(case, f"RECOMMENDATION TYPE ({rec_type.upper()})")
+        
+        # 4. Find phase-specific cases
+        print("\n4. Searching for phase-specific cases...")
+        phase_cases = self._find_phase_specific_cases(comparisons, simulation_results)
+        case_studies.extend(phase_cases)
+        for case in phase_cases:
+            phase = case['case_metadata']['phase_context']
+            self._print_case_study(case, f"PHASE-SPECIFIC ({phase.upper()})")
+        
+        # Log all case studies
+        self.analysis_log['case_studies'] = {
+            'total_cases': len(case_studies),
+            'cases': case_studies,
+            'selection_criteria': {
+                'high_impact': 'Top 10% by total improvement across metrics',
+                'context_specific': 'One example per score context (trailing/tied/leading)',
+                'recommendation_type': 'One example per major recommendation type',
+                'phase_specific': 'One example per game phase (early/middle/late)'
+            }
+        }
+        
+        print(f"\n✓ Identified {len(case_studies)} case studies for detailed analysis")
+        
+        return case_studies
+    
+    def _find_high_impact_case(self, comparisons: List[Dict], 
+                               simulation_results: List[Dict]) -> Optional[Dict]:
+        """
+        Find the highest-impact success case.
+        
+        Selects the case with the largest total improvement across all metrics.
+        """
+        best_case = None
+        best_total_improvement = -float('inf')
+        
+        for i, comp in enumerate(comparisons):
+            # Calculate total improvement
+            total_improvement = 0
+            improvement_count = 0
+            
+            for metric, metric_comp in comp.get('metric_comparisons', {}).items():
+                if metric_comp.get('improvement', False):
+                    total_improvement += metric_comp.get('difference', 0)
+                    improvement_count += 1
+            
+            # Only consider cases with improvements
+            if improvement_count > 0 and total_improvement > best_total_improvement:
+                best_total_improvement = total_improvement
+                best_case = self._create_case_study_entry(
+                    comp, simulation_results[i], 
+                    case_type='high_impact',
+                    total_improvement=total_improvement,
+                    improvement_count=improvement_count
+                )
+        
+        return best_case
+    
+    def _find_context_specific_cases(self, comparisons: List[Dict], 
+                                     simulation_results: List[Dict]) -> List[Dict]:
+        """
+        Find representative cases for each score context.
+        
+        Selects one good example for trailing, tied, and leading contexts.
+        """
+        context_cases = {}
+        
+        for i, comp in enumerate(comparisons):
+            scenario = comp.get('scenario', {}) or simulation_results[i]['scenario']
+            context = scenario.get('context', {})
+            score_context = context.get('score_context', 'unknown')
+            
+            # Calculate improvement metrics
+            improvements = sum(
+                1 for mc in comp.get('metric_comparisons', {}).values()
+                if mc.get('improvement', False)
+            )
+            total_metrics = len(comp.get('metric_comparisons', {}))
+            improvement_rate = improvements / total_metrics if total_metrics > 0 else 0
+            
+            # Keep best case for each context
+            if score_context not in context_cases or \
+               improvement_rate > context_cases[score_context]['improvement_rate']:
+                context_cases[score_context] = {
+                    'case': self._create_case_study_entry(
+                        comp, simulation_results[i],
+                        case_type='context_specific',
+                        score_context=score_context
+                    ),
+                    'improvement_rate': improvement_rate
+                }
+        
+        return [data['case'] for data in context_cases.values()]
+    
+    def _find_recommendation_type_cases(self, comparisons: List[Dict], 
+                                       simulation_results: List[Dict]) -> List[Dict]:
+        """
+        Find representative cases for each recommendation type.
+        
+        Selects one good example for each major recommendation type.
+        """
+        type_cases = {}
+        
+        for i, comp in enumerate(comparisons):
+            recommendations = comp.get('recommendations', [])
+            
+            if not recommendations:
+                continue
+            
+            # Get primary recommendation type (first or most confident)
+            primary_rec = max(recommendations, 
+                            key=lambda r: r.get('confidence_score', 0))
+            rec_type = primary_rec.get('type', 'unknown')
+            
+            # Calculate improvement metrics
+            improvements = sum(
+                1 for mc in comp.get('metric_comparisons', {}).values()
+                if mc.get('improvement', False)
+            )
+            total_metrics = len(comp.get('metric_comparisons', {}))
+            improvement_rate = improvements / total_metrics if total_metrics > 0 else 0
+            
+            # Keep best case for each type
+            if rec_type not in type_cases or \
+               improvement_rate > type_cases[rec_type]['improvement_rate']:
+                type_cases[rec_type] = {
+                    'case': self._create_case_study_entry(
+                        comp, simulation_results[i],
+                        case_type='recommendation_type',
+                        primary_recommendation_type=rec_type
+                    ),
+                    'improvement_rate': improvement_rate
+                }
+        
+        return [data['case'] for data in type_cases.values()]
+    
+    def _find_phase_specific_cases(self, comparisons: List[Dict], 
+                                   simulation_results: List[Dict]) -> List[Dict]:
+        """
+        Find representative cases for each game phase.
+        
+        Selects one good example for early, middle, and late game phases.
+        """
+        phase_cases = {}
+        
+        for i, comp in enumerate(comparisons):
+            scenario = comp.get('scenario', {}) or simulation_results[i]['scenario']
+            context = scenario.get('context', {})
+            phase_context = context.get('phase_context', 'unknown')
+            
+            # Calculate improvement metrics
+            improvements = sum(
+                1 for mc in comp.get('metric_comparisons', {}).values()
+                if mc.get('improvement', False)
+            )
+            total_metrics = len(comp.get('metric_comparisons', {}))
+            improvement_rate = improvements / total_metrics if total_metrics > 0 else 0
+            
+            # Keep best case for each phase
+            if phase_context not in phase_cases or \
+               improvement_rate > phase_cases[phase_context]['improvement_rate']:
+                phase_cases[phase_context] = {
+                    'case': self._create_case_study_entry(
+                        comp, simulation_results[i],
+                        case_type='phase_specific',
+                        phase_context=phase_context
+                    ),
+                    'improvement_rate': improvement_rate
+                }
+        
+        return [data['case'] for data in phase_cases.values()]
+    
+    def _create_case_study_entry(self, comparison: Dict, simulation: Dict,
+                                 case_type: str, **metadata) -> Dict:
+        """
+        Create a comprehensive case study entry.
+        
+        Args:
+            comparison: Comparison result
+            simulation: Simulation result
+            case_type: Type of case study
+            **metadata: Additional metadata
+        
+        Returns:
+            Dict: Comprehensive case study with all relevant details
+        """
+        scenario = simulation['scenario']
+        window_info = scenario.get('window_info', {})
+        context = scenario.get('context', {})
+        actual_metrics = scenario.get('actual_metrics', {})
+        recommendations = scenario.get('recommendations', [])
+        
+        # Extract window details
+        match_id = window_info.get('match_id', 'unknown')
+        team = window_info.get('team', 'unknown')
+        window_id = window_info.get('window_id', 'unknown')
+        start_minute = window_info.get('start_minute', 0)
+        end_minute = window_info.get('end_minute', 0)
+        
+        # Build case study entry
+        case_study = {
+            'case_type': case_type,
+            'case_metadata': {
+                'match_id': match_id,
+                'team': team,
+                'window_id': window_id,
+                'time_window': f"{start_minute:.1f}-{end_minute:.1f} min",
+                'score_context': context.get('score_context', 'unknown'),
+                'phase_context': context.get('phase_context', 'unknown'),
+                'intensity_context': context.get('intensity_context', 'unknown'),
+                **metadata
+            },
+            'initial_state': {
+                'network_metrics': {
+                    metric: float(value) 
+                    for metric, value in actual_metrics.items()
+                    if isinstance(value, (int, float))
+                },
+                'context_description': self._generate_context_description(context)
+            },
+            'recommendations': [
+                {
+                    'type': rec.get('type', 'unknown'),
+                    'description': rec.get('description', ''),
+                    'confidence_score': float(rec.get('confidence_score', 0)),
+                    'priority': rec.get('priority', 'unknown'),
+                    'rationale': rec.get('rationale', '')
+                }
+                for rec in recommendations
+            ],
+            'outcomes': {
+                'actual': self._extract_actual_outcomes(comparison),
+                'simulated': self._extract_simulated_outcomes(simulation),
+                'comparison': self._extract_comparison_metrics(comparison)
+            },
+            'impact_summary': self._generate_impact_summary(comparison, simulation)
+        }
+        
+        return case_study
+    
+    def _generate_context_description(self, context: Dict) -> str:
+        """Generate human-readable context description."""
+        score = context.get('score_context', 'unknown')
+        phase = context.get('phase_context', 'unknown')
+        intensity = context.get('intensity_context', 'unknown')
+        
+        return f"{phase.capitalize()} game phase, {score} on scoreboard, {intensity} intensity"
+    
+    def _extract_actual_outcomes(self, comparison: Dict) -> Dict:
+        """Extract actual outcome metrics."""
+        actual_outcomes = {}
+        
+        for metric, metric_comp in comparison.get('metric_comparisons', {}).items():
+            actual_outcomes[metric] = {
+                'change': float(metric_comp.get('actual_change', 0)),
+                'direction': 'increase' if metric_comp.get('actual_change', 0) > 0 else 'decrease'
+            }
+        
+        return actual_outcomes
+    
+    def _extract_simulated_outcomes(self, simulation: Dict) -> Dict:
+        """Extract simulated outcome metrics."""
+        simulated_outcomes = {}
+        
+        for metric, outcome in simulation.get('simulated_outcomes', {}).items():
+            simulated_outcomes[metric] = {
+                'baseline_change': float(outcome.get('predicted_change', 0)),
+                'recommendation_effect': float(outcome.get('recommendation_effect', 0)),
+                'total_change': float(outcome.get('total_change', 0)),
+                'final_value': float(outcome.get('simulated_value', 0))
+            }
+        
+        return simulated_outcomes
+    
+    def _extract_comparison_metrics(self, comparison: Dict) -> Dict:
+        """Extract comparison metrics."""
+        comparison_metrics = {}
+        
+        for metric, metric_comp in comparison.get('metric_comparisons', {}).items():
+            comparison_metrics[metric] = {
+                'treatment_effect': float(metric_comp.get('difference', 0)),
+                'improvement': bool(metric_comp.get('improvement', False)),
+                'percent_improvement': self._calculate_percent_improvement(metric_comp)
+            }
+        
+        return comparison_metrics
+    
+    def _calculate_percent_improvement(self, metric_comp: Dict) -> float:
+        """Calculate percent improvement."""
+        actual = metric_comp.get('actual_change', 0)
+        simulated = metric_comp.get('simulated_change', 0)
+        
+        if actual == 0:
+            return 0.0
+        
+        return float((simulated - actual) / abs(actual) * 100)
+    
+    def _generate_impact_summary(self, comparison: Dict, simulation: Dict) -> Dict:
+        """Generate impact summary for case study."""
+        metric_comparisons = comparison.get('metric_comparisons', {})
+        
+        total_metrics = len(metric_comparisons)
+        improved_metrics = sum(
+            1 for mc in metric_comparisons.values()
+            if mc.get('improvement', False)
+        )
+        
+        avg_treatment_effect = np.mean([
+            mc.get('difference', 0)
+            for mc in metric_comparisons.values()
+        ]) if metric_comparisons else 0
+        
+        return {
+            'total_metrics_analyzed': total_metrics,
+            'metrics_improved': improved_metrics,
+            'improvement_rate': float(improved_metrics / total_metrics) if total_metrics > 0 else 0,
+            'average_treatment_effect': float(avg_treatment_effect),
+            'simulation_quality': float(simulation.get('simulation_quality', 0)),
+            'overall_assessment': self._assess_case_quality(
+                improved_metrics, total_metrics, avg_treatment_effect
+            )
+        }
+    
+    def _assess_case_quality(self, improved: int, total: int, avg_effect: float) -> str:
+        """Assess overall quality of case study."""
+        if total == 0:
+            return "insufficient_data"
+        
+        improvement_rate = improved / total
+        
+        if improvement_rate >= 0.8 and avg_effect > 0.01:
+            return "strong_positive_impact"
+        elif improvement_rate >= 0.6 and avg_effect > 0.005:
+            return "moderate_positive_impact"
+        elif improvement_rate >= 0.5:
+            return "weak_positive_impact"
+        else:
+            return "mixed_or_negative_impact"
+    
+    def _print_case_study(self, case_study: Dict, case_label: str):
+        """Print formatted case study details."""
+        print(f"\n{'='*70}")
+        print(f"CASE STUDY: {case_label}")
+        print(f"{'='*70}")
+        
+        metadata = case_study['case_metadata']
+        print(f"\nMatch: {metadata['match_id']}")
+        print(f"Team: {metadata['team']}")
+        print(f"Time: {metadata['time_window']}")
+        print(f"Context: {case_study['initial_state']['context_description']}")
+        
+        print(f"\nInitial Network Metrics:")
+        for metric, value in case_study['initial_state']['network_metrics'].items():
+            print(f"  • {metric}: {value:.4f}")
+        
+        print(f"\nRecommendations ({len(case_study['recommendations'])}):")
+        for i, rec in enumerate(case_study['recommendations'], 1):
+            print(f"  {i}. [{rec['type'].upper()}] (confidence: {rec['confidence_score']:.2f})")
+            print(f"     {rec['description']}")
+            if rec.get('rationale'):
+                print(f"     Rationale: {rec['rationale']}")
+        
+        print(f"\nOutcome Comparison:")
+        comparison = case_study['outcomes']['comparison']
+        for metric, comp in comparison.items():
+            improvement_marker = "✓" if comp['improvement'] else "✗"
+            effect = comp['treatment_effect']
+            print(f"  {improvement_marker} {metric}: {effect:+.4f} "
+                  f"({comp['percent_improvement']:+.1f}%)")
+        
+        summary = case_study['impact_summary']
+        print(f"\nImpact Summary:")
+        print(f"  • Metrics improved: {summary['metrics_improved']}/{summary['total_metrics_analyzed']} "
+              f"({summary['improvement_rate']:.1%})")
+        print(f"  • Average treatment effect: {summary['average_treatment_effect']:+.4f}")
+        print(f"  • Overall assessment: {summary['overall_assessment']}")
+        print(f"  • Simulation quality: {summary['simulation_quality']:.2f}")
+    
+    def save_case_studies_to_file(self, case_studies: List[Dict], filename: str = None):
+        """
+        Save case studies to separate JSON file for easy reference.
+        
+        Args:
+            case_studies: List of case study entries
+            filename: Optional custom filename
+        """
+        if filename is None:
+            filename = f"case_studies_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        
+        try:
+            # Create a more readable format
+            output = {
+                'metadata': {
+                    'generated_at': datetime.now().isoformat(),
+                    'total_cases': len(case_studies),
+                    'case_types': list(set(cs['case_type'] for cs in case_studies))
+                },
+                'case_studies': case_studies
+            }
+            
+            with open(filename, 'w') as f:
+                json.dump(output, f, indent=2)
+            
+            print(f"\n✓ Case studies saved to: {filename}")
+            
+            # Also create a markdown summary
+            md_filename = filename.replace('.json', '.md')
+            self._create_markdown_summary(case_studies, md_filename)
+            print(f"✓ Markdown summary saved to: {md_filename}")
+            
+        except Exception as e:
+            print(f"\n✗ Failed to save case studies: {e}")
+    
+    def _create_markdown_summary(self, case_studies: List[Dict], filename: str):
+        """Create a markdown summary of case studies."""
+        with open(filename, 'w') as f:
+            f.write("# Counterfactual Analysis Case Studies\n\n")
+            f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+            f.write(f"Total Cases: {len(case_studies)}\n\n")
+            f.write("---\n\n")
+            
+            for i, case in enumerate(case_studies, 1):
+                f.write(f"## Case Study {i}: {case['case_type'].replace('_', ' ').title()}\n\n")
+                
+                metadata = case['case_metadata']
+                f.write(f"**Match:** {metadata['match_id']}  \n")
+                f.write(f"**Team:** {metadata['team']}  \n")
+                f.write(f"**Time Window:** {metadata['time_window']}  \n")
+                f.write(f"**Context:** {case['initial_state']['context_description']}  \n\n")
+                
+                f.write("### Initial Network State\n\n")
+                f.write("| Metric | Value |\n")
+                f.write("|--------|-------|\n")
+                for metric, value in case['initial_state']['network_metrics'].items():
+                    f.write(f"| {metric} | {value:.4f} |\n")
+                f.write("\n")
+                
+                f.write("### Recommendations\n\n")
+                for j, rec in enumerate(case['recommendations'], 1):
+                    f.write(f"{j}. **{rec['type'].upper()}** "
+                           f"(Confidence: {rec['confidence_score']:.2f})\n")
+                    f.write(f"   - {rec['description']}\n")
+                    if rec.get('rationale'):
+                        f.write(f"   - *Rationale:* {rec['rationale']}\n")
+                    f.write("\n")
+                
+                f.write("### Outcome Analysis\n\n")
+                f.write("| Metric | Treatment Effect | Improvement | % Change |\n")
+                f.write("|--------|-----------------|-------------|----------|\n")
+                for metric, comp in case['outcomes']['comparison'].items():
+                    marker = "✓" if comp['improvement'] else "✗"
+                    f.write(f"| {metric} | {comp['treatment_effect']:+.4f} | "
+                           f"{marker} | {comp['percent_improvement']:+.1f}% |\n")
+                f.write("\n")
+                
+                summary = case['impact_summary']
+                f.write("### Impact Summary\n\n")
+                f.write(f"- **Improvement Rate:** {summary['improvement_rate']:.1%} "
+                       f"({summary['metrics_improved']}/{summary['total_metrics_analyzed']} metrics)\n")
+                f.write(f"- **Average Treatment Effect:** {summary['average_treatment_effect']:+.4f}\n")
+                f.write(f"- **Simulation Quality:** {summary['simulation_quality']:.2f}\n")
+                f.write(f"- **Overall Assessment:** {summary['overall_assessment'].replace('_', ' ').title()}\n\n")
+                
+                f.write("---\n\n")

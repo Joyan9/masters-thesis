@@ -171,7 +171,7 @@ if __name__ == "__main__":
         
         # Run analyses and create visualizations for each RQ
         print("\n1. Running RQ1 Analysis...")
-        rq1_results = analysis.run_rq1_analysis(max_matches=80, save_results=True, filepath=data_file)
+        rq1_results = analysis.run_rq1_analysis(max_matches=100, save_results=True, filepath=data_file)
 
         print("\n2. Running RQ2 Analysis...")
         rq2_results = analysis.run_rq2_analysis(save_results=True)
@@ -179,7 +179,7 @@ if __name__ == "__main__":
         print("\n3. Running RQ3 Analysis...")
         rq3_results = analysis.run_rq3_analysis(save_results=True)
         
-        output_dir = "/workspaces/masters-thesis/results/plots/rq3"
+        output_dir = "/workspaces/masters-thesis/final_results/plots/rq3"
         print("\n=== Running plot_treatment_effect_distribution ===")
         plot_treatment_effect_distribution(rq3_results, output_dir)
 
