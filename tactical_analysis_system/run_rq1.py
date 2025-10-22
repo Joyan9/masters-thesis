@@ -256,23 +256,23 @@ if __name__ == "__main__":
     context_types = ['score_context', 'phase_context', 'intensity_context']
 
     # 1. Distribution comparison
-    plot_distribution_comparison(results_df, metrics)
+    plot_distribution_comparison(results_df, metrics, output_dir="final_results/plots/rq1")
 
     # 2. Effect sizes
     effect_df = compute_effect_sizes(results_df, metrics, context_types)
     plot_effect_size_heatmap(effect_df)
 
     # 3. Mean trajectory
-    plot_mean_trajectory(results_df, metrics)
+    plot_mean_trajectory(results_df, metrics, output_dir="final_results/plots/rq1")
 
     # 4. Statistical test summary (CSV)
-    statistical_test_summary(results_df, metrics, context_types)
+    statistical_test_summary(results_df, metrics, context_types, output_dir="final_results/plots/rq1")
 
     # 5. Forest plot for pairwise comparisons
-    plot_forest_pairwise(effect_df)
+    plot_forest_pairwise(effect_df, output_dir="final_results/plots/rq1")
 
     # 6. Context co-occurrence heatmap
-    plot_context_cooccurrence(results_df)
+    plot_context_cooccurrence(results_df, output_dir="final_results/plots/rq1")
 
     # 7. Example networks (if you have network_data)
     if network_data:
