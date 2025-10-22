@@ -248,7 +248,7 @@ if __name__ == "__main__":
     print(f"Windows with recommendations: {sum(len(r['recommendations']) > 0 for r in flat_recs)}")
     print(f"Windows without recommendations: {sum(len(r['recommendations']) == 0 for r in flat_recs)}")
     
-    output_dir = "results/plots/rq2"
+    output_dir = "final_results/plots/rq2"
     
     print("\nGenerating improved visualizations...")
     print("1. Rule Triggering Analysis...")
