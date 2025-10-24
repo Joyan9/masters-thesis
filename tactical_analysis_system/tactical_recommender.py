@@ -455,6 +455,57 @@ class ThresholdAnalyzer:
         self.thresholds = thresholds
         return thresholds
 
+    def log_thresholds(self, filepath: Optional[str] = None) -> str:
+        """
+        Persist and print extracted performance thresholds.
+
+        Args:
+            filepath (Optional[str]): Output JSON filepath. If None, defaults to
+                final_results/performance_thresholds_<timestamp>.json
+
+        Returns:
+            str: Path to written file.
+        """
+        # Prepare output path
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S")
+        out_dir = Path("final_results")
+        out_dir.mkdir(parents=True, exist_ok=True)
+        if filepath is None:
+            filepath = out_dir / f"performance_thresholds_{ts}.json"
+        else:
+            filepath = Path(filepath)
+            filepath.parent.mkdir(parents=True, exist_ok=True)
+
+        # Build save payload with simple metadata and counts
+        payload = {
+            "metadata": {
+                "generated_at": datetime.now().isoformat(),
+                "source": "ThresholdAnalyzer.extract_thresholds",
+                "system_version": "v2.0_geometric_mean"
+            },
+            "thresholds": self.thresholds,
+            "counts": {}
+        }
+
+        # Add counts per metric if original values were stored (best-effort)
+        for metric, vals in (self.thresholds or {}).items():
+            try:
+                # store presence of percentiles as indicator
+                payload["counts"][metric] = {k: float(v) for k, v in vals.items()}
+            except Exception:
+                payload["counts"][metric] = None
+
+        # Write JSON
+        with open(filepath, "w") as f:
+            json.dump(payload, f, indent=2)
+
+        # Print concise console summary
+        print(f"Saved performance thresholds to: {filepath}")
+        for metric, th in (self.thresholds or {}).items():
+            print(f"  - {metric}: good={th.get('good'):.4f}, average={th.get('average'):.4f}, poor={th.get('poor'):.4f}")
+
+        return str(filepath)
+
 
 class RuleEngine:
     """
@@ -1190,7 +1241,13 @@ class TacticalRecommender:
         
         # Extract performance thresholds from historical data
         thresholds = self.threshold_analyzer.extract_thresholds(network_data)
-        
+        # Log and persist thresholds for audit / reporting
+        try:
+            self.threshold_analyzer.log_thresholds()
+        except Exception:
+            # Do not fail initialization on logging error
+            pass
+         
         # Initialize rule engine with thresholds
         self.rule_engine = RuleEngine(thresholds)
         

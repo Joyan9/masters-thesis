@@ -41,7 +41,7 @@ Low-quality predictive models
    Metric                |   R²    |   MAE   |  RMSE
    ---------------------|---------|---------|---------
    density               |   0.580 |   0.009 |   0.011
-   clustering_coefficient |   0.437 |   0.016 |   0.021
+   clustering_coefficient |   0.438 |   0.016 |   0.021
    avg_betweenness_centrality |   0.524 |   0.013 |   0.016
    avg_eigenvector_centrality |   0.368 |   0.015 |   0.020
    avg_path_length       |   0.595 |  44.659 |  54.884

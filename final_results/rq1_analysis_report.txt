@@ -77,7 +77,7 @@ Density:
   Practical significance: ✗ (max Δ = 0.001, threshold = 0.050)
 
 Clustering Coefficient:
-  Kruskal-Wallis: H = 7.334, p = 0.0255 (corrected: p = 0.4088) (ns)
+  Kruskal-Wallis: H = 7.338, p = 0.0255 (corrected: p = 0.4080) (ns)
   Effect size: η² = 0.003 (negligible, 0.3% variance)
   Practical significance: ✗ (max Δ = 0.002, threshold = 0.050)
 
@@ -182,7 +182,7 @@ Density:
   Practical significance: ✗ (max Δ = 0.004, threshold = 0.050)
 
 Clustering Coefficient:
-  Kruskal-Wallis: H = 33.043, p = 0.0000 (corrected: p = 0.0000) ***
+  Kruskal-Wallis: H = 33.041, p = 0.0000 (corrected: p = 0.0000) ***
   Effect size: η² = 0.010 (negligible, 1.0% variance)
   Practical significance: ✗ (max Δ = 0.004, threshold = 0.050)
 
@@ -303,7 +303,7 @@ Density:
   Practical significance: ✗ (max Δ = 0.029, threshold = 0.050)
 
 Clustering Coefficient:
-  Kruskal-Wallis: H = 716.882, p = 0.0000 (corrected: p = 0.0000) ***
+  Kruskal-Wallis: H = 716.907, p = 0.0000 (corrected: p = 0.0000) ***
   Effect size: η² = 0.191 (large, 19.1% variance)
   Practical significance: ✗ (max Δ = 0.025, threshold = 0.050)
 
